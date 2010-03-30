@@ -1,0 +1,27 @@
+?1 dialogs
+
+The following dialogs pop up at the center of the screen and block everything
+until dealt with.
+@hsee
+SymChooser , dialog#VBox
+@h
+? boolean_dialog
+@hsyn
+ boolean_dialog("@varlabel", ["@varaccept", "@varcancel"])
+@hdesc
+	return 1 or 0
+@h
+
+? continue_dialog
+@hsyn
+ continue_dialog("@varlabel")
+@hdesc
+	info to the user
+@h
+
+? string_dialog
+@hsyn
+ string_dialog("@varlabel", @varstrdef)
+@hdesc
+	returns 0 if canceled and @varstrdef remains unchanged
+@h

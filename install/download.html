@@ -1,0 +1,26 @@
+<title>NEURON Home directory</title>
+<h1> Get the sources </h1>
+Create a directory that will hold the NEURON system and move to it.
+
+For concreteness for the remaining instructions suppose you want it to be
+/usr/local/neuron. Then:
+<pre>
+mkdir /usr/local/neuron
+cd  /usr/local/neuron
+</pre>
+
+Get the neuron tar file:<br>
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/nrn4.1.1.tar.Z">
+Download nrn4...tar.Z (3.3MB)</a>
+<p>
+Extract the sources:
+<pre>
+tar xf nrn4*tar
+</pre>
+
+If you got the sources by ftp or if the tar files remained in the
+ compressed form
+then use:
+<pre>
+zcat nrn4*tar.Z | tar xf -
+</pre>

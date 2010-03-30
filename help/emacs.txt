@@ -1,0 +1,162 @@
+		MicroEMACS 3.6M1.1 Help screens		(6/5/86)
+   Notation:
+    ^A     means to press and hold the <Ctrl> key while typing "a" or "A".
+    M-A    means to press and release the <Esc> key, then type "a" or "A".
+    <Esc>  means to press and release the key labeled "Esc".
+
+Type ^C to quit.
+-----------------------------------------------------------------------
+		(0) THE VERY BASICS
+
+If you want to quit a command that has gone wrong, use ^G.
+Move around a file with:
+   ^V  or <Pg Dn>  Forward one screen	 M-< or <Home>	Begining of file
+   M-V or <Pg Up>  Backward one screen	 M-> or <End>	End of file
+Use these commands to read the help screens, which are really just a file.
+-----------------------------------------------------------------------
+		(1) MOVING THE CURSOR
+^F  Forward character   M-F    Forward word		Keypad arrows are
+^B  Backward character  M-B    Backward word		active on PCs!
+^A  Front of line	
+^E  End of line		
+^N  Next line		M-N    Next paragraph (End of paragraph)
+^P  Previous line	M-P    Previous paragraph (Beginning of paragraph)
+-----------------------------------------------------------------------
+		(2) SEARCHING
+^S	Search forward from cursor position.  Type in a string to be searched
+	for at the prompt and end it with ESC.  Either case matches either
+	unless EXECT mode is set for the current buffer.
+^R	As above, but Reverse search from cursor position. (search backwards)
+<ALT> S	Search for the next occurrence of the last string (IBM-PC only)
+<ALT> R	Search for the last occurrence of the last string (IBM-PC only)
+-----------------------------------------------------------------------
+		(3) REPLACING
+M-R   Replace all instances of first typed-in string with second
+          typed-in string.  End each string with ESC.
+M-Q   Replace with query.  Answer with:
+	     ^G stop			.   stop, and return to starting point
+  <space> or y  replace & continue	n   no replacement & continue
+	     !  replace the rest	?   Get a list of options
+-----------------------------------------------------------------------
+		(4) CAPITALIZING & TRANSPOSING
+M-U	UPPERCASE word		^X^U	uppercase region
+M-C	Capitalize word		
+M-L	lowercase word		^X^L	lowercase region
+
+^T	Transpose characters
+^Q	Quote next entry, so that control codes may be entered into text
+-----------------------------------------------------------------------
+		(5) REGIONS & THE KILL BUFFER
+M-<spacebar>	set MARK at current position
+^X^X		eXchange mark and cursor
+
+A REGION will then be continuously-defined as the area between the mark and
+the current cursor position.  The KILL BUFFER is the text which has been
+most recently saved or deleted.
+-----------------------------------------------------------------------
+		(6) DELETING & INSERTING
+^H	Delete previous character	M-^H	Delete previous word
+^D	Delete next character		M-D	Delete next word
+^K	Kill (delete) to end of line	<INSERT>  Insert a space (IBM-PC only)
+^O	Open (insert) line		<DELETE>  Delete next char (  "  )
+^W	Wipe (delete) region between mark (set using M-<spacebar>) and cursor
+M-W	Copy region to kill buffer
+Note: ^K saves the killed part of the line in the KILL buffer. ^Y will
+      yank it back.
+-----------------------------------------------------------------------
+		(7) COPYING AND MOVING
+^W  Wipe (delete) region		M-W	copy region to KILL buffer
+^Y  Yank-back save buffer at cursor
+Generally, the procedure for copying or moving text is:
+    1)  Mark a REGION using M-<spacebar> at beginning and cursor at end.
+    2)  Delete it (with ^W) or copy it (with M-W) into the KILL buffer.
+    3)  Move the cursor to the desired location and yank it back (with ^Y).
+-----------------------------------------------------------------------
+		(8) MODES OF OPERATION
+^X M	Add Mode		^X ^M	Delete Mode
+	OVER	Replaces (overwrites) rather than inserts characters.
+	WRAP	Turns on word wrap (automatic carriage return at right margin).
+	VIEW	View file without changing it. (Ignore commands to change it.)
+	EXACT	All searches done with exact case matching.
+	CMODE	Automatic indenting for C programs (default for .c and .h files)
+-----------------------------------------------------------------------
+		(9) ON-SCREEN FORMATTING
+
+Mn-^X F		Set fill column (right margin) to column n.
+M-J		Justify (reformat) paragraph so that text lies between margins
+Mn-<tab>	Set tab spacing to n charecters between tabs stops
+^X =		Position report -- displays line number, char count, size
+	Mn-A means type <ESC> then a number (one or more digits) then A.
+-----------------------------------------------------------------------
+		(10) MULTIPLE WINDOWS
+Many WINDOWS may be active at once on the screen.  All windows may show
+different parts of the same buffer, or each may display a different one.
+  ^X 2	Split the current window in two	^X 1	remove all but current window
+  ^X N	cursor to next window		^X P	cursor to previous window
+  M-^V	scroll down, other window	M-^Z	scroll up, other window
+  ^X ^	Enlarge current window		
+-----------------------------------------------------------------------
+		(11) MULTIPLE BUFFERS
+A BUFFER is a named area containing a document.  You can have many buffers.
+^X B	Switch to another buffer.
+^X ^B	Show buffer directory in a window.
+^X ^F	Find file; read file into a new buffer created to hold it.
+^X K	Delete a non-displayed buffer.
+^X X	Switch to next buffer in buffer directory.
+-----------------------------------------------------------------------
+		(12) READING FROM DISK
+^X ^F	Find file; read file into a new buffer created to hold it.
+	(This is the usual way to begin editing a new file.)
+^X ^R	Read file into current buffer, erasing its previous contents.
+	No new buffer will be created.
+^X ^I	Insert file into current buffer at cursor's location.
+^X ^V	Find a file to make current in VIEW mode
+-----------------------------------------------------------------------
+		(13) SAVING TO DISK
+^X ^S	Save current buffer to disk, using the buffer's filename
+	as the name of the disk file.  Any disk file of that name
+	will be overwritten.
+^X ^W	Write current buffer to disk.  When prompted, type in a new 
+	filename to write to; it will become the current buffer's filename.
+^C	Write out all changed buffers and exit MicroEMACS
+	You will be prompted on whether to write each changed buffer.
+-----------------------------------------------------------------------
+		(14) ACCESSING THE OPERATING SYSTEM
+^X!	Send one command to the operating system and return.
+^_	Start a new command processor under MicroEMACS.
+M-S	Suspend MicroEMACS into the background (UNIX 4.2BSD only)
+^X^C	Exit MicroEMACS. If changed buffers exist, you will be asked if
+	you want to exit anyway.  If you answer yes, they will not be saved.
+^C	Prompt to write out all changed buffers and then Exit MicroEMACS.
+-----------------------------------------------------------------------
+		(15) SPECIAL KEYS AND REPEATING COMMANDS
+^G	Cancel current command and return to top level of processing.
+^U	Universal repeat.  May be followed by an integer (default = 4)
+	and repeats the next command that many times.  If typed again
+	while entering the integer, it multiplies the integer by 4.
+Mn-	Same as ^U, except that there is no default and it can't be used to
+	multiply the integer by 4.  Type <Esc> then an integer then a command.
+-----------------------------------------------------------------------
+		(16) KEY BINDINGS
+Emacs has lots of commands, each with a name.  Most commands are bound to a 
+key.  For example, the command next-line is bound to the key ^N.
+    M-X		Execute a named (and possibly unbound) command.
+    M-K		Bind a named command to a key.  Prompts for command name,
+		then key to bind it to.
+    M-^K	Unbind a key.  Prompts for key to unbind.
+    M-X describe-bindings
+		List the current key bindings in a buffer.  This is an
+		example of an unbound command.  It lists all commands, and
+		shows which key(s), if any, each command is bound to.
+
+	The M-X and M-K commands provide command name completion.  Typing
+	<space> while entering a command name will fill in as much as possible
+	of the rest of the name.
+-----------------------------------------------------------------------
+		(17) MACROS
+^X(	Begin macro
+^X)	End macro
+^XE	Execute macro
+
+	From the beginning to the end of a macro all keystrokes are saved
+and can be executed en masse.

@@ -1,0 +1,223 @@
+?p neuron.exe general
+?0 ObjectOrientedProgramming
+See <a href="../../../refman/obj.html">Object Oriented Programming</a> in the
+reference manual.
+? begintemplate
+@hsyn
+begintemplate
+
+@hdesc
+Declare a new class or data structure. Any HOC code may appear between the
+@{begintemplate@} and @{endtemplate@} declarations. Classes are instantiated with
+the new statement.
+
+@hex
+@code
+begintemplate String
+public s
+strdef s
+ proc init() {
+   if (numarg()) {
+     s = $s1
+   }
+ }
+endtemplate String
+objref s
+s = new String("Hello")
+print s.s
+@endcode
+will print "Hello" to the screen.
+@h
+
+? endtemplate
+@hsyn
+endtemplate
+@hdesc
+Closes the class declaration
+@hsee
+begintemplate
+@h
+
+? objectvar
+@hsyn
+objectvar
+@hdesc
+Synonym for @aobjref .
+@h
+
+? objref
+@hsyn
+objref
+
+@hdesc
+A comma separated list declarations of object variables.  Object
+variables are labels (pointers, references) to the actual objects.  Thus @{o1 = o2@}
+merely states that o1 and o2 are labels for the same object.  Objects are
+created with the @{new@} statement.  When there are no labels for an object
+the object is deleted. The keywords @{objectvar@} and @{objref@} are synonyms.
+
+An object has a unique name that can be determined with the @{print obj@} statement
+and consists of the template name followed by an index number in brackets.
+This name can be used in place of an objref.
+
+@hex
+@code
+objref vec, g
+vec = new Vector(20)
+g = new Graph()
+@endcode
+creates a vector object and a graph object with pointers named vec and g, respectively.
+
+@hsee
+new, begintemplate, List, pointprocesses, SectionList
+
+@h
+
+? public
+@hsyn
+public
+
+@hdesc
+A comma separated list of all the names in a class that are available
+outside the class.
+
+@hsee
+begintemplate
+@h
+
+? external
+@hsyn
+external
+
+@hdesc
+ A comma separated list of functions, procedures, iterators, objects,
+strings, or variables defined at the top
+level that can be executed within this class.  This statement is
+optional but if it exists must follow the begintemplate or public line. 
+This allows an object to get information from the outside and can
+be used as information shared by all instances. External iterators
+can only use local variables and arguments.
+@hex
+@code
+global_ra = 100
+ func ra_value() {return global_ra}
+begintemplate Cell
+ external ra_value
+ create axon
+ proc init() {
+	forall Ra = ra_value()	/* just the axon */
+ }
+endtemplate Cell
+@endcode
+
+@aexecute1 can be used to obtain external information as well.
+
+@h
+
+? new
+@hsyn
+@varobjectvariable = new @varObject(@varargs)
+
+@hdesc
+Creates a new object/instance of type/class Object and makes
+objectvariable label/point to it.
+When the object no longer is pointed to, it no longer exists.
+
+@hex
+@code
+objref vec
+vec = new Vector(30)
+@endcode
+creates a vector of size 30 with its pointer named @{vec@}.
+
+@h
+
+? init
+@hsyn
+proc init() { ... }
+@hdesc
+If an init procedure is defined in a template, then it is called whenever
+an instance of the template is created.
+@hsee
+new
+@h
+
+? unref
+@hsyn
+proc unref() { print this, " refcount=", $1 }
+@hdesc
+If an unref procedure is defined in a template, then it is called whenever
+the reference count of an object of that type is decremented. The reference
+count is passed as the argument. When the count is 0, the object will be
+destroyed on return from unref. This is useful in properly managing
+objects which mutually reference each other. Note that unref may be
+called recursively.
+@h
+
+
+? NULLobject
+@hsyn
+objref nil
+@hdesc
+When an object variable is first declared, it refers to NULLobject
+until it has been associated with an instance of some object class
+by a @anew#ObjectOrientedProgramming statement.
+A NULLobject object variable can
+be useful as an argument to certain class methods.
+@hex
+@code
+objref nil
+print nil  // prints NULLobject
+@endcode
+@h
+
+? this
+@hsyn
+objref this
+@hdesc
+Declared inside a template
+(see @abegintemplate#ObjectOrientedProgramming ).
+Allows the object to call a procedure
+with itself as one of the arguments.
+@hex
+@code
+begintemplate Demothis
+   public printname
+   objref this
+
+   proc init() {
+     printname()
+   }
+
+   proc printname() {
+     print "I am ", this
+   }
+endtemplate Demothis
+
+objref foo[3]
+print "at creation"
+for i=0,2 foo[i]=new Demothis()
+print "check existing"
+for i=0,2 foo[i].printname()
+@endcode
+@h
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

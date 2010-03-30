@@ -1,0 +1,20 @@
+#!/bin/sh
+PATH=$PATH:.
+export PATH
+LC_ALL=C
+export LC_ALL
+d='.'
+case $# in
+	1)	d="$1";;
+	*)	d="neuron";;
+esac
+rm -f temp
+for i in `find $d -name \*.hel -print | sed '
+	s/\.hel//
+	s/^\.\///
+' | sort`
+do
+	hel2tmp.sh $i
+done
+
+tmp2html.sh $d

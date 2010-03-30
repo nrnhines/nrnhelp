@@ -1,0 +1,410 @@
+<title>Object Oriented Programming in OC</title>
+<h1>Object Oriented Programming in OC</h1>
+<p>
+In OC, an object is a collection of functions, procedures, and data; the
+data defines the state of the object.  OC has just enough extra syntax
+to support a subset of the object oriented programming paradigm. 
+A subset, because all it really does is support information hiding and has
+no support for <a href=#inheritance>inheritance or polymorphism</a>.
+Nevertheless, it offers
+greatly increased ability to maintain conceptual control of the entire
+program.  It immediately gives one all the power of data structures of
+languages such as C or Pascal and most of the power of modules. 
+<p>
+Objects in OC can be thought of as a kind of abstact data type that is
+very useful in separating the idea of what a thing does from the details
+of the way it goes about doing it.  OC language support for objects came
+late to the neuron system --- after the notion of cable sections --- and
+as a consequence there are several types (eg.  sections, mechanisms,
+range variables) of variables that are clearly treated as objects from a
+conceptual point of view but grew up without a uniform syntax.  Object
+orientation is in many ways a natural style of programming whose
+techniques are re-invented constantly by every programmer
+<a href=#coplein>(Coplein, 92)</a>.  The object
+notation consolidates these techniques so that much of the tedious
+programming necessary to use them is automatically handled by the
+interpreter. 
+<h2> Object vs. Class</h2>
+<p>
+Let's first get straight the distinction between object and class. 
+You're close to the mark if you think of a class as a cookie cutter that
+cuts out objects called cookies.  The class is a general type whereas an
+object of the class is a specific instance of the type. The idea of a
+class as a template motivated the keyword that signals the definition
+of classes in OC --- one surrounds a collection of functions,
+procedures, and variables with the keywords, begintemplate and
+endtemplate. 
+<p>
+From the user's point of view it is necessary to discuss how to create
+and destroy objects; what is an object variable; how to call an object's
+methods or access its data; and how to pass objects to functions.  From
+the programmer's point of view it is necessary to discuss how to define
+a class. We'll give a general overview first before plunging into details.
+
+<h2> OC Object Model</h2>
+The object model used by OC manipulates references to objects and
+<a href=#objrefnever>never</a>
+the objects themselves.  That is, object variables
+or references are equivalent to pointers.  The reference can be
+considered to be a label or alias for the object.  Thus assignment
+<pre>
+	ob1 = ob2
+</pre>
+means that ob1 refers to the same object referred to by ob2 and NOT that
+a new object is cloned from ob2 and pointed to by ob1. Thus if
+the ob2's object contains a variable called "data" and that value is
+changed by the statement:
+<pre>
+	ob2.data = 5
+</pre>
+Then
+<pre>
+	ob1.data
+</pre>
+will print the value
+<pre>
+	5
+</pre>
+It quickly becomes tedious to always talk about ``the object referred to by
+xxx'' and we often shorten the phrase to ``xxx'' always keeping in the
+back of our minds that xxx is only one of possibly many labels for the
+object it points to. For the next few paragraphs we'll strictly maintain
+the distinction between object reference and object but be aware that we
+don't always maintain such discipline.
+
+<h2>Objects and object variables</h2>
+
+<h2>Declaring an object variable</h2>
+Just as it is often convenient to deal with variables that can take on different
+number values (algebra is more powerful than arithmetic), it is often
+convenient to deal with object variables which can refer to different
+objects at different times. One declares object variables with
+<pre>
+	objectvar name1, name2, name3, ...
+</pre>
+One can use objref in place of the objectvar keyword. They are synonyms.
+The objref keyword does have the advantage of being easier to type and it
+is a bit more explicit with regard to the pointer nature of object variables.
+
+<h2>Creating an object</h2>
+One creates an object with the <code> new </code> keyword. Thus
+<pre>
+	objectvar g[3]
+	for i=0,2 { g[i] = new Graph() }
+</pre>
+creates 3 graph objects, g[0], g[1], g[2], using
+the Graph template. We'll talk about where the templates come from
+later.
+
+Executing these two statements will create three graph windows on the
+screen.
+
+<h2>Using an object variable</h2>
+The object variable, g[2],
+should be thought of as pointing to an actual object located in the computer.
+This object has hidden variables that describe its state along with
+visible variables, functions and procedures that do things to itself and to
+the outside world.  The syntax for using the visible components of an object
+uses a ``dot'' notation reminiscent of how one accesses a structure element
+in C. E.g.
+<pre>
+	g[1].erase()
+</pre>
+although, in C, since the object variable is really a pointer one would
+use the arrow notation, ``a->b''. In C++, the object variable is more
+akin to a reference variable.
+
+The Graph class is a built-in template with a large number of functions
+available for constructing x-y graphs.
+<pre>
+	g[2].size(0,1,0,10)
+	g[2].xaxis()
+</pre>
+defines a model coordinate system  and draws an axis in the third graph
+window.
+
+<h1>Defining an object template</h1>
+The syntax for object templates is
+<pre>
+	begintemplate name
+	public name1, name2, name3, ...
+	external function1, function2, function3, ...
+		... hoc code ...
+	endtemplate name
+</pre>
+With very few exceptions the hoc code can be anything you like but
+generally consists of declarations of variables and definitions of
+procedures, and functions.
+Outside the template you cannot refer to any variable or functions except
+those listed in the public statement.
+Inside the template you cannot refer to any user externally
+defined global variables or functions except those that appear in the
+external statement.
+You can execute built-in functions such as printf(), and exp().
+You can also create objects from any externally defined template.
+
+Even very simple templates have their uses. There is no such thing in
+OC as an array of strings. But consider:
+<pre>
+begintemplate String
+   public s
+   strdef s
+endtemplate String
+</pre>
+Now one can use arrays of objects to get the functionality of arrays of
+strings.
+<pre>
+	objref s[3]
+	for i=0,2 s[i] = new String()	//they all start out empty
+	s[0].s = "hello"
+	s[2].s = "goodbye"
+</pre>
+
+It is important to realize that
+there is no conflict between the use of s as a strdef inside the template
+and the use of s as an object variable outside the template.
+<p>
+Direct commands are executed once when the template is interpreted. This
+means that declarations such as double, strdef, \func,
+xopen(file), etc. that need to be executed only once and not for each
+object are useful as direct commands; but direct statements such as
+a=5 are less useful since a is declared but the value is lost
+when an actual object is created since this statement is not executed
+at that time.  To initialize variables to values other than 0. You
+need to declare a proc init() procedure. This procedure will be executed
+automatically everytime a new object is created.  If init() appears in
+the public list, you can execute it explicitly as well.
+<p>
+Suppose you have a hoc file that used to work
+perfectly all by itself (when nothing
+else was loaded) and did something meaningful when you typed \V+run()+
+Lets also suppose the file has no direct commands except declarations.
+(Otherwise collect them in an init() procedure).
+Then, if you put the following lines at the beginning of the file
+<pre>
+begin_template F1
+public run
+</pre>
+and the following line at the end of the file
+<pre>
+end_template F1
+</pre>
+then you have an object template. You can create an object and run it with
+<pre>
+objectvar f1
+f1 = new(F1)
+f1.run()
+</pre>
+and you will get identical behavior as before.
+What's been gained? Well, you can do this to a bunch of files and load them
+all together and never worry about variable or function name clashes between
+files because nothing (except the object templates and specific object names)
+are global.
+<p>
+All variables used by
+the template probably should be declared with direct assignment statements
+in an init() procedure
+in order to give them good default values.
+It is possible to declare a variable with an assignment statement in procedure,
+P1,
+and then use it in a public procedure, P2, but be careful
+of the case when the user executes
+P2 before executing P1. In that case, the variable will have a value 0.
+<p>
+All variables that are not explicitly initialized in an init() procedure start
+off with a value of 0.
+<p>
+An object inside the machine is destroyed when no object variable points to it.
+
+<h1>Examples</h1>
+<h2>Stack of objects</h2>
+<pre>
+begin_template Stack
+   public push, pop
+
+   objref list
+
+   proc init() {
+      list = new List()
+   }
+
+   procedure push() {
+      list.append($o1)
+   }
+
+   procedure pop() {local cnt
+      cnt = list.count()
+      if (cnt == 0) {
+         print "stack underflow"
+         stop
+      }
+      $o1 =  list.object(cnt-1)
+      list.remove(cnt-1)
+   }
+</pre>
+Creating a stack with
+<pre>
+objref stack
+stack = new Stack()
+</pre>
+initializes the stack by implicitly calling the init procedure which
+merely creates an empty list for use by the push and pop procedures.
+
+stack.push(g[1]) adds a reference to the second Graph at the end of the list.
+stack.pop(g[2]) would cause g[2] to reference the same object as g[1]
+and remove it from the stack.
+uses List.count to find the object at the end of the list
+and removes the reference from the list. 
+<p>
+Every object has a default print command which merely prints the objects
+template name. Every object has a template name which is a string that
+can be printed with  \V+print obvar.template_name+. Note that this is
+equivalent (in the default case) to \V+obvar.print+.  The developer of
+the Stack template would have to decide if she wanted the stack.print
+to print just "Stack", or all the object template names on the stack,
+or the objects themselves (with their individual print functions).
+
+<h1>Implementation Notes</h1>
+This section explains some implementation details
+that may help the
+user understand why some rarely used coding styles may work strangely.
+<p>
+Hoc began life as a stack machine. That is, the code the user writes
+is interpreted into intermediate code that looks somewhat like FORTH
+or Postscript languages.  The intermediate code executes a lot faster since
+one is not dealing with the ascii text the user typed. When the user executes
+a+b, hoc looks up the addresses of a and b once in a symbol table
+at translation time. At execution time, the addresses are known.
+What is relevant here is that there was only one symbol table that contained
+ALL names including keywords, built-in functions, and user defined names.
+Problems you will have with the OOP extension can probably be traced back
+to the distinction between what is done at translation vs what is done
+at execution. (Actually, these problems always existed in normal hoc as well
+and consisted of failing to notify translated code that something had changed).
+<p>
+The OOP extension involved separating out the keywords and built-in functions
+(everything that is linked with hoc) into a primary symbol table that is
+always looked at first. This symbol table is fixed and doesn't get any names
+added to it. Every template creates a
+private symbol table which
+contains every name referenced in the
+template that was not a
+built-in name.  This symbol table is fixed by the template in
+the sense that the only way it can be changed is to re-interpret the
+entire template.  This differs from the top level in which the user can
+add a new name at any time and it persists forever or until it is
+explicitly removed with the ``delete'' command. On re-interpreting
+a template, the private symbol table is thrown away.
+Then, all objects created with the old template are destroyed and
+all objectvar's referring to these objects are changed to 0 (NULL).
+All code is searched to find objectvar's that use
+public components and the pointers to these components are updated.
+If the public interface has changed so that the component no longer exists
+then an error message replaces that call.
+The user will have to find the
+code for the function and re-interpret it.
+This means that if the interface doesn't change it is not necessary to
+re-interpret any code that uses the objects created by the template.
+If the interface does change then all code that used the previous interface
+must be re-interpreted to avoid the error messages.
+<p>
+There is only one list of code for a function defined by a template
+and it is shared by all the objects created from the template.
+Likewise for the symbol table.
+<p>
+There is a separate copy of the data (implicitly declared by the template)
+for each object. In old HOC, the symbol table entries for variables
+pointed directly to the value of the data. Obviously this won't work for
+objects. There is one variable name, but its value is different for
+different objects.  The solution is to change variable data pointers
+to pointers into an object space. Ie. they are relative to the start of
+the object data.
+
+<h1>Caveats</h1>
+If you change a template's public interface you must re-interpret all the
+code that uses objects that refer to the template.
+	
+<h1>FootNotes</h1>
+
+<h2><a name=inheritance>Inheritance and Polymorphism</a></h2>
+Inheritance allows one to
+define many kinds of subclasses starting from a more abstract
+base class.
+Polymorphism allows the computer to choose the right thing to do when
+a function is called on the base class.
+<p>
+Only an example can suggest that these concepts might have some value.
+<p>
+Suppose we need to construct cells of several types and connect them
+together to form a cell layer.
+
+The classic example
+is a drawing program that manages a list of objects of type "shape".
+Shape is a base class for a bunch of particular types of shape: lines,
+rectangles, circles, etc. and if you want to know the position of any
+of them
+	line3.
+
+ For example a circle is defined as a particular kind of shape
+and so is a square. All shapes have a position and that is managed by the
+base class but different kinds of shapes requre different methods for
+
+Inheritance is most effective when the subtype "IS A"
+kind of base type. That is, whenever a program uses the an object of the
+base type then it would also make sense if it used an object of the subtype.
+Without this relationship, Polymorphism is usually not possible.
+<p>
+People often use inheritance when the IS A relationship does not hold in order
+to conveniently reuse a portion of the base class. When one class is "ALMOST
+LIKE" another and that other is ready and waiting to be used
+it is tempting to inherit the whole behavior and replace only the parts that are
+different. It's best to avoid this practice and instead factor out the
+behavior common to both classes and place it in a base class that can be
+inherited by both classes.
+<p>
+When inheritance captures the "IS A" relationship then Polymorphism is
+possible. A language supports Polymorphism when it automatically does the
+right thing 
+<p>
+OC has no direct support for inheritance but you can get half of its
+effectiveness by
+
+<p>
+<a name=coplein>Coplein</a>
+To begin learning
+C++ you can start with any of a myriad of introductory books.  But you
+should end with Coplein's <b>Advanced C++ Programming; styles and
+idioms</b>.
+<p>
+<a name=objrefnever>Well, almost never.</a>
+An object
+does have a unique name that can be used anywhere a reference to the
+object is used.  But that feature is for the use of the graphical
+interface and should <a href:#objrefnever2>never</a> be used in programming. 
+<p>
+<a name=objrefnever2> Never. This time I really mean it.</a>
+Object names or id's are not guaranteed to be the same between different
+sessions of NEURON unless the sequence of creation and destruction of
+objects of the same type are identical. The object name is defined as
+classname[index] where the index is automatically incremented everytime
+one is created. Indexes are not reused after objects are deleted except
+when there are no existing objects of that type; then the index starts
+over again at 0. Why are they allowed at all? It's due to a fairly
+confusing sequence of considerations.
+<p>
+Because some objects
+such as the PointProcessManager should be destroyed when their window
+is dismissed.  This could not happen if the interpreter had an objref
+to that object since objects are destroyed only when the reference count
+goes to 0. Thus the idiom is to cause the window itself to
+increment the reference count for the object
+method for VBox (and decrement it when the
+window is dismissed, see VBox.ref).
+Now the hoc objref that holds the reference can safely discard it and
+the object will not be immediately destroyed. But the consequence is that
+there is
+now no way to get to the object (or the objects it created)
+from the interpreter except to use the object name. eg. there is no
+other way to graph one of PointProcess variables in the PointProcessManager.
+
+

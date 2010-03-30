@@ -1,0 +1,13 @@
+/* HH membrane action potential */
+
+create a
+access a
+{nseg=1 diam=1 L=1 insert hh}
+xopen("$(NEURONHOME)/lib/hoc/pointbsr.hoc")
+xopen("$(NEURONHOME)/lib/hoc/stdrun.hoc")
+newPlotV()
+objref s
+s = new IClamp(.5)
+s.dur=.1
+s.amp=.01
+run()

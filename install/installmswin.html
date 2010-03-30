@@ -1,0 +1,71 @@
+<TITLE>NEURON Installation under MSWindows</TITLE>
+
+<h1> NEURON Installation on PC under MSWindows </h1>
+The mswindows version comes in two components. The first consists of
+neuron.exe, examples, and useful interpreter files.
+
+<p>
+The second consists
+of files that are only necessary if you wish to write your own membrane
+mechanisms using the model description language and compile them into a
+dll that can be loaded into neuron.exe. You do not need to install this part
+if you already have a dll file containing the desired mechanisms.
+
+<h2> 0.) Is win32s installed? </h2>
+NEURON.EXE is a 32 bit program (it also works under Windows NT) and under mswindows
+requires a recent version of the win32s dll.
+If you are not sure you have it,
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/pw1118.exe">
+download the pw1118.exe file</a>
+into an empty temporary directory, execute it and follow
+the resultant readme instructions.
+<h2> 1.) Install neuron.exe </h2>
+This part is packaged into two files
+called nrndisk1.exe and nrndisk2.z1. Installation consists of downloading
+these two files into an empty temporary directory, executing nrndisk1.exe,
+and then executing the resultant install.exe.
+<p>
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/README">
+README for installing neuron.exe</a><br>
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/nrndisk1.exe">
+download the nrndisk1.exe file</a> (1.3 MB)<br>
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/nrndisk2.z1">
+download the nrndisk2.z1 file</a> (1.45 MB)<br>
+If your browser attempts to read the above nrndisk2.z1 file as a text file
+then either modify your browser options so it downloads files with .z1 extensions
+or else download
+<a href = "ftp://ftp.neuron.yale.edu/neuron/tmp/nrndisk2.zip">nrndisk2.zip</a>
+and RENAME IT TO nrndisk2.z1 because IT IS NOT A ZIP file and the
+installer will not work unless the file is called nrndisk2.z1
+
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/Notes">
+Notes, bugs, oddities with respect to mswindows</a>
+<h2> 2.) Install mknrndll (optional) </h2>
+This part is only necessary if you need to compile model descriptions of
+membrane mechanisms into a dll (dynamically loadable library). If you already
+have dll files containing the mechanisms you need, you do not need to install
+this part. It is packaged
+into two files called nrndisk3.exe and nrndisk4.zip. Installation consists
+of downloading these two files into an empty temporary directory, executing
+nrndisk3.exe, and then executing the resultant install.exe. This part contains
+a gcc compiler and enough utilities to build dll's from model
+description files.
+<p>
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/mknrndll/README">
+README for installing mknrndll.bat</a><br>
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/mknrndll/nrndisk3.exe">
+download the nrndisk3.exe file</a> (1.2 MB)<br>
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/mknrndll/nrndisk4.zip">
+download the nrndisk4.zip file</a> (1.4 MB)<br>
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin/mknrndll/Notes">
+Notes with respect to mswindows</a>
+<P>
+Associating Hoc Files with NEURON.<br>
+<a href="http://www.nnc.yale.edu/w16/win31.htm"> in Windows 3.1</a><br>
+<a href="http://www.nnc.yale.edu/w32/winnt.htm"> in Windows 95 and NT</a>
+<hr>
+This is the ftp directory containing the above files.<br>
+<a href = "ftp://ftp.neuron.yale.edu/neuron/mswin">
+ftp.neuron.yale.edu/neuron/mswin</a>
+
+<hr><address><a HREF="../address.html">M. Hines</a> </address>

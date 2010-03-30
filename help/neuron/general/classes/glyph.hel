@@ -1,0 +1,111 @@
+?p neuron.exe general classes
+
+?1 Glyph
+@hsyn
+g = new Glyph()
+@hdesc
+Specification of a drawing. The drawing can be rendered on a Graph
+as many times as desired using
+@code
+graph.glyph(g, x, y, scalex, scaley, angle)
+@endcode
+The drawing style uses commands reminiscent of postscript.
+@hsee
+Graph#classes glyph#Graph
+@h
+
+? new_path
+@hsyn
+g = g.path()
+@hdesc
+Begin a new path.
+@h
+
+? move_to
+@hsyn
+g = g.m(x, y)
+@hdesc
+Set the current point to the coordinates.
+@h
+
+? line_to
+@hsyn
+g = g.l(x, y)
+@hdesc
+A line from the current point to the coordinates.
+@h
+
+? stroke
+@hsyn
+g = g.s()
+g = g.s(colorindex)
+g = g.s(colorindex, brushindex)
+@hdesc
+Render the current path as a line.
+@h
+
+? close_path
+@hsyn
+g = g.close()
+@hdesc
+A line from the current point to the first point of the path.
+@h
+
+? fill
+@hsyn
+g = g.fill()
+g = g.fill(colorindex)
+@hdesc
+For a closed path, fill the interior with the indicated color.
+@h
+
+? curve_to
+@hsyn
+g = g.curve(x,y, x1,y1, x2,y2)
+@hdesc
+Draw a curve from the current point to x,y
+@h
+
+? control_point
+@hsyn
+g = g.cpt(x,y)
+@hdesc
+Draw a small open rectangle at the coordinates. Intended to indicate
+special locations on the glyph which can be selected. Not very useful
+at this time.
+@h
+
+? erase
+@hsyn
+g = g.erase()
+@hdesc
+The drawing is empty
+@h
+
+? label
+@hsyn
+g = g.label("string", x, y, fixtype, colorindex)
+@hdesc
+Not implemented
+@h
+
+? glyph
+@hsyn
+g = g.glyph(glyphobject, x, y, scale, angle)
+@hdesc
+Not implemented
+@h
+
+? gif
+@hsyn
+g = g.gif("filename")
+@hdesc
+Reads the gif image in the file. All Graph glyph#Graph arguments still work
+when the glyph contains a gif image. The gif image is drawn first so
+other drawing specs will appear on top of it.
+@hsee
+gif#Graph glyph#Graph
+@h
+
+
+

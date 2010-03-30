@@ -1,0 +1,904 @@
+<title> User Defined Membrane Mechanisms </title>
+Keywords
+<ul>
+<li><a href="#NEURON">NEURON</a>
+<ul>
+<li><a href="#SUFFIX">	SUFFIX</a>
+<a href="#POINT_PROCESS">POINT_PROCESS</a>
+<li><a href="#NONSPECIFIC_CURRENT">NONSPECIFIC_CURRENT</a>
+<a href="#ELECTRODE_CURRENT">ELECTRODE_CURRENT</a>
+<li><a href="#USEION">USEION</a>
+<ul>
+<li><a href="#READ">READ</a>
+<a href="#WRITE">WRITE</a>
+<a href="#VALENCE">VALENCE</a>
+</ul>
+<li><a href="#GLOBAL">GLOBAL</a>
+<a href="#SECTION">SECTION</a>
+<a href="#RANGE">RANGE</a>
+<li><a href="#POINTER">POINTER</a>
+<a href="#EXTERNAL">EXTERNAL</a>
+</ul>
+<li><a href="units.html">UNITS</a>
+<a href="#UNITSON">UNITSON</a>
+<a href="#UNITSOFF">UNITSOFF</a>
+
+<li><a href="#INDEPENDENT">INDEPENDENT</a>
+<a href="#PARAMETER">PARAMETER</a>
+<a href="#ASSIGNED">ASSIGNED</a>
+<a href="#STATE">STATE</a>
+<li><a href="#DEFINE">DEFINE</a>
+<a href="#LOCAL">LOCAL</a>
+
+<li><a href="#INITIAL">INITIAL</a>
+<a href="#BREAKPOINT">BREAKPOINT</a>
+<li><a href="#SOLVE">SOLVE</a>
+<ul>
+<li><a href="#METHOD">METHOD</a>
+<li><a href="#STEADYSTATE">STEADYSTATE</a>
+</ul>
+<li><a href="#KINETIC">KINETIC</a>
+<ul>
+<li><a href="kinetic.html#CONSERVE">CONSERVE</a>
+<li><a href="kinetic.html#COMPARTMENT">COMPARTMENT</a>
+<li><a href="kinetic.html#LONGDIFFUS">LONGITUDINAL_DIFFUSION</a>
+</ul>
+<li><a href="#PROCEDURE">PROCEDURE</a>
+<a href="#DERIVATIVE">DERIVATIVE</a>
+<a href="#NONLINEAR">NONLINEAR</a>
+<a href="#LINEAR">LINEAR</a>
+<a href="#FUNCTION">FUNCTION</a>
+<ul>
+<li><a href="#TABLE">TABLE</a>
+<ul>
+<li><a href="#DEPEND">DEPEND</a>
+</ul>
+</ul>
+<li><a href="#INCLUDE">INCLUDE</a>
+<li><a href="#VERBATIM">VERBATIM</a>
+<a href="#ENDVERBATIM">ENDVERBATIM</a>
+<li><a href="#COMMENT">COMMENT</a>
+<a href="#ENDCOMMENT">ENDCOMMENT</a>
+<li><a href="#TITLE">TITLE</a>
+</ul>
+
+<h1>Introduction</h1>
+<p>
+This document describes how to use the NBSR model description language
+to add membrane mechanisms to NEURON.  The kinds of mechanisms that can
+be added are:
+<ul>
+<li> Channels in which the model consists of current-voltage relationships.
+<li> Calculation of internal and external
+ionic concentration changes due to currents carried
+by specific ions.
+</ul>
+Many user defined mechanisms can be simultaneously ``insert''ed into
+sections in NEURON and NEURON will keep track of the total current for
+each ionic species used and the effect of that current on the membrane
+potential. For example, suppose a calcium pump, sodium-calcium exchanger,
+calcium channel, radial calcium diffusion, and calcium activated potassium
+mechanisms are inserted into a cable section. Then the total calcium current
+is calculated
+as the sum of the individual currents from the calcium pump, exchanger,
+and channel.  The internal calcium concentration just under the membrane
+is calculated from the total calcium current and diffusion away from the
+surface. 
+The potassium current through the cagk channel is calculated
+from the internal calcium concentration next to the membrane and the 
+membrane potential.  And the membrane potential is calculated from the
+total current. (The above is only a partial list of the interactions
+among these channels. The point is that the ionic current, membrane voltage,
+and concentration computations are consistent regardless of the channels
+inserted into the cable section.)
+
+<p>
+Mechanisms are normally <em> local</em>. That is they do not depend on
+what is happening at other places on the neuron.
+However, a method exists for writing mechanisms that depend on variables of
+mechanisms at other locations. For example
+the calcium concentration at a presynaptic
+mechanism can be used to calculate the conductance change at a postsynaptic
+mechanism. (See, Importing variables from other mechanisms.)
+Also, FUNCTION's written in a model are global and may be used in other
+models if they do not involve range variables.
+
+<h2>History</h2>
+<p>
+MODL (model description language) was originally developed at
+the NBSR (National Biomedical Simulation
+Resource) to specify models for simulation with SCoP (Simulation Control
+Program). With MODL one specifies a physical model in terms of
+simultaneous nonlinear algebraic equations, differential equations, or
+kinetic schemes.  MODL translates the specification into the C language
+which is then compiled and linked with the SCoP program. It turned out
+that only modest extensions to the MODL syntax were necessary to
+allow it to translate
+model descriptions into a form suitable for compiling and linking
+with NEURON V2.  The extended version was called NMODL. In NEURON V3
+the advent of the object oriented interpreter, OC,  allowed Point Processes to
+be treated as objects instead of parallel arrays of variables. The
+model description translator that emits code suitable for NEURON V3 is
+called NOCMODL. NMODL and NOCMODL handle identical input model descriptions,
+they differ merely in the output interface code. A prototype model description
+translator has been written to generate code suitable for linking with GENESIS.
+
+<p>
+This document discusses only the differences between NMODL and MODL.
+A complete user manual for the standard model description language is
+available from NBSR. A brief description of MODL is in the document entitled,
+``SCoP Language Summary''.
+
+<h2>Usage</h2>
+<p>
+The easiest way to write membrane mechanisms is by analogy with the
+examples. The example files come in pairs with a .mod and .hoc extension.
+Models (membrane mechanisms) are linked into neuron with the command:
+<pre>
+	nrnivmodl  file1 file2 file3 ...
+</pre>
+In the list of .mod files you do <em> not </em> type the extension, only the prefix.
+If there are no files specified then nrnivmodl will use all the 
+mod files in the current working directory.  When nrnivmodl is finished, there
+will exist a version of NEURON called ``special'' which contains those
+membrane mechanisms described in the files. ``Special'' should be renamed
+to something more suitable.  The associated .hoc files can be executed by
+``special'' to test various aspects of the models.
+
+<p>
+It is extremely important that mechanisms have consistent units.  To ensure
+this use the command:
+<pre>
+	modlunit file
+</pre>
+leaving off the file extension. <a href="units.html"> For more information about
+units. </a>
+
+<h2>Rationale</h2>
+<p>
+Our first nerve simulation program, CABLE, contained several built-in
+membrane mechanisms, including radial calcium diffusion, calcium channel,
+calcium activated potassium channel, calcium pump, etc.  However, in practice,
+only the Hodgkin-Huxley squid channels were enough of a standard to be used
+``as is'' across more than one series of simulations.  The other channels
+all required some type of modification to be useful as new situations arose.
+Sometimes the modifications were minor, such as changing the coordinate
+system for radial calcium diffusion so that there were more compartments
+near the membrane, but often we were forced to add an entirely new
+mechanism from scratch such as Frankenhaeuser-Huxley channels for
+Xenopus node.  The problem was greatly compounded for other users of
+CABLE who needed to add new channels but were not familiar with the numerical
+issues or the detailed interface requirements. NMODL with NEURON
+is a significant improvement over CABLE with regard to adding new membrane
+mechanisms:
+<ul>
+<li> Interface details are handled automatically.
+<li> Consistency of units is ensured. (By checking with modlunit.)
+<li> Mechanisms described by a kinetic scheme are written with a syntax
+in which the reactions are clearly apparent.
+<li> There is often a great increase in clarity since statements are
+directly related to discourse at the model level instead of the C
+programming level.
+<li> The high level description language often provides a great deal
+of leverage in that one model statement can get translated into very
+many C statements.  For example, kinetic reaction statements get translated
+into statements which explicitly calculate sparse
+jacobian matrix coefficients.
+</ul>
+At the same time, since the model description is translated into C, the
+computation speed remains the same or better than a hand coded mechanism
+in CABLE.
+
+<h1>General Paradigm</h1>
+<p>
+Membrane mechanisms deal with currents, concentrations,
+potentials, and state variables
+and it is helpful to know how NEURON treats these variables in order to
+correctly write a new membrane mechanism.
+
+<p>
+NEURON integrates its equations using the function <tt> fadvance()</tt>.
+During a call to this function the value of the global time variable, <tt>t</tt>,
+is increased by the value of <tt>dt</tt>  <tt>(t = t + dt)</tt>,
+and all the voltages, currents,
+concentrations, etc. are changed to new values appropriate to the new
+value of time.  The default numerical method used by NEURON produces
+values which have an error proportional to <tt>dt</tt>.  That is, it makes
+no sense to ask at what time in the interval are the values most accurate.
+However, by setting the global variable
+<tt>secondorder</tt> equal to 2, the values produced by <tt>fadvance</tt> have
+errors proportional to <tt>dt^2</tt> and it is important to realize that
+<ul>
+<li> membrane potential is second order correct at time, <tt>t</tt>.
+<li> currents are second order correct at time, <tt>t - dt/2</tt>.
+<li> channel states are second order correct at time, <tt>t + dt/2</tt>;.
+<li> concentrations are second order correct at time, <tt>t</tt>.
+</ul>
+
+<p>
+Fadvance() goes about its business by first setting up the current
+conservation matrix equation to be used in the calculation of membrane
+potential.  To do this it calls the current functions for each mechanism
+in each segment which compute conductance using the old values of states
+and current using the old values of states and membrane potential.
+The value of time when the BREAKPOINT block is called is t+dt/2 so models
+which depend explicitly on time will be second order correct it they use
+the value of <tt> t</tt>}.
+Fadvance then solves the matrix equation for the new value of the membrane
+potential.  Depending on the value of <tt>secondorder</tt> it then
+may re-call these current functions with the average of the new and old
+membrane potentials to get an accurate final value of the current.
+It then calls the state integrator functions using the new
+value of the membrane potential and the second order correct currents
+to calculate the new values of the states. The details of this method
+can be gleaned from the file nrn/src/nrnoc/fadvance.c.
+
+<p>
+It is therefore necessary for NMODL to divide up the statements properly
+into a current function and a state function.  It also has to create
+the interface between model variables and NEURON and create a memory
+allocation function so that segments have separate copies of each variable.
+Finally, it has to make sure that local model currents get added to the
+correct global ionic currents.
+
+<p>
+Note: This simulation method is very effective and
+highly efficient when currents depend on
+membrane potential and ionic concentrations do not change on the
+same time scale as the membrane potential.  When these conditions
+are not met, however, such as in a calcium pump mechanism in which
+the current depends on the concentrations of calcium next to the
+membrane, one must be careful to use a <tt>dt</tt> small enough to
+prevent the occurrence of numerical instabilities. (Or else using a single
+model to describe both the pump current and that current's effect on concentration
+so that the concentrations and pump states may be computed simultaneously.
+An example of such a model is in nrn/demo/release/cabpump.mod)
+A future version of
+NEURON will have the option (slightly less efficient) of calculating
+all state variables simultaneously so that numerical stability is
+guaranteed.
+
+Further discussion of the numerical method's used by NEURON are found
+<a href="methods.html">here</a>.
+
+<h1>How does NMODL fit with MODL</h1>
+<p>
+Only a small part of the full model description language is relevant to
+neuron mechanisms.  The important concepts held in common are
+the declaration of all variables as
+<dl>
+<dt> <a name="PARAMETER">PARAMETER</a> <dd> These are variables which are set by
+the user
+and not changed by the model itself.  In a NEURON context some of these
+parameters need to be range variables which can vary with position and some
+are more useful as global variables.  Special variables to NEURON such as
+<tt>celsius</tt>, <tt>area</tt>, <tt>v</tt>, etc. if used in a model
+should be declared as
+parameters. (and you shouldn't assign values to them in the model).
+ Ionic concentrations, currents, and potentials
+that are used but not set
+in this particular model should be declared as parameters.
+NMODL does not enforce the "constantness" of parameters but stylistically
+it is a good rule to follow since there is a special field editor widget in NEURON's
+graphical user interface which makes it easier to modify a PARAMETER's value.
+There is an unfortunate restriction on PARAMETER's in that they cannot declare
+arrays. Even if an array is conceptually a PARAMETER, it must be declared
+as an ASSIGNED variable. In NMODL, PARAMETERS and ASSIGNED variables are
+practically synonyms. They substantively differ only in that when a
+panel of variables is automatically created, PARAMETERS are displayed in
+augmented field editors which make it easier to change values whereas ASSIGNED
+variables are displayed in field editors in which the only way to change the
+value is to type it from the keyboard. (see xvalue).
+<dt><a name="STATE">STATE</a> <dd>These are variables which are the unknowns in differential
+and algebraic equations.
+They are normally the variables to be ``SOLVE''ed for within the
+BREAKPOINT block.
+For example, in HH channels the states are m, h, and n.
+In a NEURON context they are always range variables.
+Ionic concentration is a state only if the concentration is being
+calculated within that specific model (mechanism). ERRORS in the simulation
+would occur if concentrations were computed in more than one mechanism inserted
+at the same location.  Membrane potential, <tt>v</tt>, is <em> never</em>
+a state since
+only NEURON itself is allowed to calculate that value.
+<dt> <a name="ASSIGNED">ASSIGNED</a> <dd> These are variables which can be computed directly
+by assignment statements and are important enough that you may wish
+to know their value during a simulation.  In a NEURON context you will wish
+to divide them between range variables and global variables.
+<dt> <a name="CONSTANT">CONSTANT</a> <dd>These are variables that cannot be changed during the
+simulation.
+<dt> <a name="LOCAL">LOCAL</a> <dd>These are equivalent to C static variables. ie shared
+between all instances of a given mechanism.
+<dt> <a name="INDEPENDENT">INDEPENDENT</a> <dd> This specifies the mathematical independent variable.
+This is always time, <tt>t</tt>, unless the model is so simple that time
+does not appear, such as a passive channel. In that case, <tt>v</tt> is normally
+chosen as the independent variable. MODL required this statement but NMODL
+will implicitly generate one for you.
+</dl>
+When currents and ionic potentials are calculated in a particular model they
+are declared either as STATE, or ASSIGNED depending on the nature
+of the calculation or whether they are important enough to save. If a variable
+value needs to persist only between entry and exit of an instance
+one may declare it as LOCAL, but in that case the model cannot be vectorized
+and different instances cannot be called in parallel.
+
+<p>
+<a name="INCLUDE">INCLUDE</a><br>
+The INCLUDE statement replaces itself with the contents of the indicated file.
+eg.
+<pre>
+INCLUDE "units.inc"
+</pre>
+If the full path to the file is not given, the file is first looked
+for in the current working directory, then in the directory where the
+original .mod file was located,
+and then
+in the directories specified by the colon separated list in the
+environment variable MODL_INCLUDES. Notice that the INCLUDE filename
+explicitly requires a complete file name --- don't leave off the
+suffix, if any.
+
+<p>
+Other blocks which play similar roles in NMODL and MODL are
+<dl>
+<dt> <a name="BREAKPOINT">BREAKPOINT</a> <dd>This is the main computation block of the model.  Any
+states are integrated by a SOLVE statement.  Currents are set with
+assignment statements at the end of this block.  Think of this block
+as making sure that on exit, all variables are consistent at time, <tt>t</tt>.
+The reason this block is named BREAKPOINT is because in SCoP it was
+called for each value of the INDEPENDENT variable at which the user desired
+to plot something. It was responsible for making all variables consistent
+at that value of the INDEPENDENT variable (which usually required integrating
+states from their values at the previous call using SOLVE statements).
+In NMODL, this block is usually called twice every time step (with voltage
+equal to v+.001 and voltage equal to v) in order to
+calculate the conductance from the currents. Often, errors result if one
+computes values for states in this block. All state depending explicitly or
+implicitly on time should
+only be changed in a block called by a SOLVE statement.
+
+<dt> <a name="DERIVATIVE">DERIVATIVE</a> <dd>If the states are governed by differential equations,
+this block is used to assign values to the derivatives of the states.
+Such statements are of the form <tt>y' = </tt> <em> expr</em>.  These equations
+are normally integrated from the old values of the states to
+their new values at time, <tt>t</tt>, via a SOLVE statement in the BREAKPOINT block.
+The expression may explicitly involve time. The SOLVE statement for a DERIVATIVE
+block should explicitly invoke either
+<pre>
+	SOLVE deriv METHOD euler
+or
+	SOLVE deriv METHOD runge
+or
+	SOLVE deriv METHOD derivimplicit
+</pre>
+because the default integration method
+is a variable time step runge-kutta method which cannot work in a NEURON context.
+The first two methods above are computationally cheap but are
+numerically unstable when equations are stiff (states vary a lot within
+a dt step).
+
+HH type mechanisms have state equations which are particularly
+simple and  extra efficiency and accuracy is easily obtained by integrating
+the states analytically.  The hh2.mod example shows how to do this.
+
+<dt> <a name="NONLINEAR">NONLINEAR</a> <dd> This block solves simultaneous equations in the form
+of a list of statements with the syntax,
+<pre>
+	~ expr = expr
+</pre>
+When this block is called by the SOLVE
+statement, the values of the states are computed so that the equations are
+true.  The default method used is newton's method.  These kinds of equations
+can also appear within a DERIVATIVE block.
+
+<dt> <a name="KINETIC">KINETIC</a> <dd> This block specifies a sequence of chemical reactions.
+The default method used is backwards euler which is very stable but only
+first order correct. If the SOLVE statement specifies
+a ``METHOD sparse'' the method is still backwards euler but
+the computation may be much faster.
+See <a href="kinetic.html">KINETIC block</a>
+
+<dt> <a name="PROCEDURE">PROCEDURE</a> <dd>Procedures normally do not return a value but are
+called for their side effects, eg, the setting of variables.  Procedures
+are callable from NEURON by the user.
+
+<p>
+However if a procedure is called
+by the user, and it makes use of any range variables, then the user is
+responsible for telling the mechanism from what location it should get
+its range variable data. This is done with the hoc function:
+<pre>
+	setdata_mechname(x)
+</pre>
+where mechname is the mechanism name. For range variables there must
+of course be a currently accessed section. In the case of Point processes,
+one calls procedures using the object notation
+<pre>
+	pp_objref.procname()
+</pre>
+In this case procname uses the instance data of the point process referenced
+by pp_objref.
+<p>
+Sometimes, state equations are so simple, e.g.
+HH states, that significant efficiency gains and extra accuracy are
+obtainable by a special integration procedure. In this case the
+procedure can be called by a SOLVE statement and actually integrates the
+states (but don't call it directly at the user level!).
+If a PROCEDURE is solved by a SOLVE statement it may return an error code
+(By default it returns an error code of 0 which denotes success.) To return
+a non-zero error code use the idiom
+<pre>
+VERBATIM
+return ...;
+ENDVERBATIM
+</pre>
+
+<dt> <a name="FUNCTION">FUNCTION</a> <dd>This block can be called at either the user level or from
+within the model description. Functions return a double precision value.
+Functions can also be called from other models. When the calling model is
+translated a warning will be generated. Just be sure to load all needed
+models. Use the suffix of the model where the function is declared.
+The user level caveats stated for procedures apply. 
+</dl>
+
+<p>
+<a name="TABLE">TABLE</a><br>
+The TABLE statement is very useful in a NEURON context because of
+the potentially great increase in speed of simulation. Often rate functions are
+complicated functions of the voltage and is is very expensive to calculate
+their values over and over at every segment.  By using tables of rate
+coefficients, it is not uncommon to improve simulation speed by a factor
+of 5.
+
+<p>
+In the context of a procedure taking one argument, TABLE has the syntax
+ 
+<pre>
+TABLE variables DEPEND dependencies FROM lowest TO highest WITH tablesize
+</pre>
+
+<p>
+where:
+variables is a list of variable names each of which will have its
+own table.
+dependencies is a list of parameters that, when any of them changes their
+value, cause the tables to be recalculated.
+lowest is the least arg value for the first table entry.   
+highest is the greatest arg value for the last table entry.
+table size is the number of elements in each table.
+    
+<p>
+Each model that has a table also has a flag associated with it that
+can be changed by the user called
+        usetable_suffix
+which specifies that the tables are to be used (1, default) or not used (0).
+    
+<p>
+With usetable_suffix = 0, when the procedure is called it ignores the tables
+and just computes the values using the assignment statements as any normal
+procedure.
+
+<p>
+With usetable_suffix = 1, when the procedure is called, the
+arg value is used to assign values to the "variables" by looking them up
+in the tables and the time normally spent executing the assignment statements
+is saved. If the tables are out of date (a "dependency" has a different
+value from its value the last time the tables were constructed) or had never
+been created, the tables are created. 
+ 
+<p>
+Note that updating tables with tablesize=200 is equivalent to calling
+the procedure 200 times with different values of the argument. This
+investment is only repaid if the tables remain valid for many more than
+200 subsequent calls to the procedure and if the calculation takes more
+time than an interpolated table lookup.
+
+<p>
+<a name="INITIAL">INITIAL</a><br>
+The INITIAL block is called when the user executes the finitialize() function
+from hoc. Just prior to executing the user code in the INITIAL block (and
+if an INITIAL block does not exist) all
+states are set to the values in the state0 variables (default 0). It may
+be useful to declare some state0 variables as GLOBAL or RANGE in the NEURON
+block in order to give some user control over the default initialization
+of states. In the INITIAL block these or any other variables may be set
+to calculated values. Note that
+states can also be initialized explicitly by the user at the hoc level.
+
+<p>
+The case where an ionic variable is also a STATE requires some care to
+deal with properly in the INITIALIZE block. The problem is that
+the ionic variable, eg. cai, is actually the value of a local copy of the
+ionic variable which is located in the variable named _ion_cai. Because of
+the order of copying and default initialization, cai is always initialized
+to 0 regardless of the global value of cai and on exit the global value of
+cai is then set to 0 as well. The way to avoid this is either to make sure
+the state0 variable, cai0, is set properly or (I believe more preferably),
+set the local cai variable explicitly using the global cai variable with
+a VERBATIM statement within the INITIAL block. The idiom is:
+<pre>
+VERBATIM
+cai = _ion_cai;
+ENDVERBATIM
+</pre>
+
+
+<p>
+Many other features of the model description language, such as DISCRETE blocks, sensitivity analysis,
+optimization are not relevant in the NEURON context and may or may not
+produce meaningful translations.  Since NMODL produces a c file, it is
+possible for the highly motivated to modify that file in order to do
+something implementation dependent.  In this regard, the VERBATIM block
+can be used to place c code within the model description file.
+
+<h1>NMODL to <a name="NEURON">NEURON</a> syntax</h1>
+<p>
+This section describes the special NEURON block that has been added to
+the standard model description language in order to allow translation of
+a model into a form suitable for linking with NEURON.
+
+<p>
+The keyword NEURON introduces a special block which contains statements
+that tell NMODL how to organize the variables for access at the NEURON
+user level. It declares:
+<ul>
+<li> Which names are to be treated as range variables.
+<li> Which names are to be treated as global variables.
+<li> The names of all the ions used in the model and how the corresponding
+concentrations, current, and reversal potential is to be treated.
+<li> The suffix to be used for all variables in the model so that they
+do not conflict with variables in other models.
+<li> Whether the model is for a point process such as a synapse or
+a distributed process with density along an entire section such as a channel
+density.
+<li> Which names will be connected to external variables. (See ``Importing
+variables from other mechanisms''.)
+</ul>
+The syntax is (each statement can occur none or more times) :
+<pre>
+NEURON {
+   SUFFIX ...
+   RANGE ...
+   GLOBAL ...
+   NONSPECIFIC_CURRENT ...
+   USEION ... READ ... WRITE ... VALENCE real
+   POINT_PROCESS ...
+   POINTER ...
+   EXTERNAL ...
+}
+</pre>
+<h2> <a name="SUFFIX">SUFFIX</a> name</h2>
+<p>
+The suffix, ``<tt>_name</tt>'' is appended to all variables, functions, and
+procedures that are accessible from the user level of NEURON. If the SUFFIX
+statement is absent, the file name is used as the suffix (with the addition
+of an underscore character.  If there is a <tt>POINT_PROCESS</tt> statement,
+that name
+is used as the suffix.  Suffixes prevent overloading of names at the user
+level of NEURON.  At some point in the future I may add something similar
+to the access statement which will allow the omission of the suffix for a
+specified mechanism.
+Note that suffixes are not used within the model
+description file itself. If the SUFFIX <em> name</em> is the word, "<tt>nothing</tt>",
+then no suffix is used for
+variables, functions, and procedures explicitly declared in the .mod file.
+However, the mechanism name will be the base file name.
+This is useful if you know that no conflict of names
+will exist or if the .mod file is primarily used to create functions callable
+from NEURON by the user and you want to specify those function names exactly.
+
+<h2> <a name="RANGE">RANGE</a> name, name, ...</h2>
+<p>
+These names will be become range variables. Do not add suffixes here.
+The names should also be declared in the normal PARAMETER or ASSIGNED
+statement outside
+of the NEURON block.  Parameters that do not appear in a NEURON RANGE
+statement will become global variables.
+Assigned variables that do not appear in this statement or in the NEURON
+GLOBAL statement will be hidden from the user.
+When a mechanism is inserted in
+a section, the values of these range variables are set to the values
+specified in the normal PARAMETER statement outside the NEURON block.
+
+<h2> <a name="GLOBAL">GLOBAL</a> name, name, ...</h2>
+<p>
+These names, which should be declared elsewhere as ASSIGNED or PARAMETER
+variables,
+become global variables instead of range variables.  Notice here that
+the default for a PARAMETER variable is to become a global variable whereas
+the default for an ASSIGNED variable is to become hidden at the user level.
+
+<h2> <a name="NONSPECIFIC_CURRENT">NONSPECIFIC_CURRENT</a> name, name, ...</h2>
+<p>
+This signifies that we are calculating local currents which get added
+to the total membrane current but won't contribute to any particular
+ionic concentration.  This current should be assigned a value
+after any SOLVE statement but before the end of the BREAKPOINT block.
+This name will be hidden at the user level unless it appears in a NEURON
+RANGE statement.
+
+<h2> <a name="USEION">USEION</a> ion READ name, ...  WRITE name, ... VALENCE number</h2>
+<p>
+This statement declares that a  specific ionic species will be used within
+this model. The built-in
+HH channel uses the ions <tt>na</tt> and <tt>k</tt>. Different models which deal with
+the same ionic species should use the same names so that total concentrations
+and currents can be computed consistently. The ion, <tt>Na</tt>, is different from
+<tt>na</tt>.  The example models using calcium call it, <tt>ca</tt>. If an ion is
+declared, suppose it is called,
+<tt>ion</tt>, then a separate mechanism is internally created
+within NEURON, denoted by <tt>ion</tt>, and automatically inserted whenever
+the ``using'' mechanism is inserted.  The variables of the mechanism
+called <tt>ion</tt> are
+outward total current carried by this ion, <tt>iion</tt>; internal and
+external concentrations of this ion, <tt>ioni</tt> and <tt>iono</tt>; and
+reversal potential of this ion, <tt>eion</tt>.  These ion range variables do
+NOT have suffixes.
+Prior to 9/94 the reversal potential was not automatically calculated
+from the Nernst equation but, if it was <em>used</em> it had to be set by
+the user or by an assignment in some mechanism (normally the Nernst equation).
+The usage of ionic concentrations and reversal potential has been changed
+to more naturally reflect their physiological meaning while remaining
+reasonably efficient computationally.
+
+<p>
+The new method governs the behaviour of the reversal potential and
+concentrations with respect to their treatment by the GUI (whether
+they appear in PARAMETER, ASSIGNED, or STATE panels; indeed, whether they
+appear at all in these panels) and when the reversal potential
+is automatically computed from the concentrations using the Nernst
+equation. The decision about what style to use happens on a per section
+basis and is determined by the set of mechanisms inserted within the
+section. The rules are defined in the reference to the function
+ion_style(). Three cases are noteworthy.
+
+<p>
+Assume only one model is inserted in a section.
+<pre>
+	USEION ca READ eca
+</pre>
+Then eca will be treated as a PARAMETER and cai/cao will not
+appear in the parameter panels created by the gui.
+
+<p>
+Now insert another model at the same section that has
+<pre>
+	USEION ca READ cai, cao
+</pre>
+Then 1) eca will be "promoted" to an ASSIGNED variable, 2) cai/cao
+will be treated as constant PARAMETER's, and 3) eca will be computed
+from the Nernst equation when finitialize() is called.
+
+<p>
+Lastly, insert a final model at the same location in addition to the
+first two.
+<pre>
+	USEION ca WRITE cai, cao
+</pre>
+Then  eca will still be treated as an ASSIGNED variable but will be
+computed not only by finitialize but on every call to fadvance().
+Also cai/cao will be initialized to the global variables
+cai0_ca_ion and cao0_ca_ion respectively and treated as STATE's by the
+graphical interface.
+
+<p>
+The idea is for the system to automatically choose a style which is
+sensible in terms of dependence of reversal potential on concentration
+and remains efficient.
+
+<p>
+Since the nernst equation is now automatically used as needed it is
+necessary to supply the valence (charge carried by the ion) except for
+the priviledged ions: na, k, ca which have the VALENCE 1, 1, 2 respectively.
+
+<p>
+Only the ion names <tt>na</tt>, <tt>k</tt>, and <tt>ca</tt> are initialized to a
+physiologically meaningful value --- and those may not be right for
+your purposes.  Concentrations and reversal potentials should be considered
+parameters unless explicitly calculated by some mechanism.
+
+<p>
+The <tt>READ</tt> list of a <tt>USEION</tt> specifies those ionic variables which
+will be used to calculate other values but is not calculated itself.
+The <tt>WRITE</tt> list of a <tt>USEION</tt> specifies those ionic variables which
+will be calculated within this mechanism. Normally, a channel will read
+the concentration or reversal potential variables and write a current.
+A mechanism that calculates concentrations will normally read a current
+and write the intracellular and/or extracellular; it is no longer necessary
+to ever write the reversal potential as that will be automatically computed
+via the nernst equation.
+It usually doesn't make sense to both read and
+write the same ionic concentrations.
+It is possible to READ and WRITE currents.
+One can imagine,  a large calcium
+model which would <tt>WRITE</tt> all the ion variables (including current)
+and READ the ion current.
+And one can imagine
+models which <tt>READ</tt> some ion variables and don't <tt>WRITE</tt> any.
+It would be an error if more than one mechanism at the same location tried
+to WRITE the same concentration.
+
+<p>
+A bit of implementation specific discussion may be in order here.
+All the statements after the SOLVE statement in the BREAKPOINT block are
+collected to form a function which is called during the construction of
+the charge conservation matrix equation.  This function is called
+several times in order to compute the current and conductance  to be added
+into the matrix equation.  This function is never called if you are not
+writing any current.  The SOLVE statement is executed after the new voltages
+have been computed in order to integrate the states over the time step, <tt>dt</tt>.
+Local static variables get appropriate copies of the proper ion variables
+for use in the mechanism. Ion variables get updated on exit from these
+functions such that WRITE currents are added to ion currents.
+
+<h2> <a name="POINT_PROCESS">POINT_PROCESS</a> name</h2>
+<p>
+Point models are used for synapses, electrode stimuli, etc. They are
+distinguished from standard mechanisms in that instead of ``insert''ing
+the mechanism into a section and accessing parameters via range variables,
+point mechanisms are created as interpreter objects, eg.
+<pre>
+objref stim
+stim = new IClamp(x)
+</pre>
+This differs from the previous release of NEURON V2 where point processes
+were created as a vector of mechanisms each of which 
+is given a particular location within a specified section. Now, instead
+of the vector of
+mechanisms being represented as a set of parallel vectors containing the
+values of STATE's, PARAMETER's, etc., values are accessed via the standard
+object syntax, eg. <tt>stim.amp = 2</tt>.
+Since standard mechanisms are considered in terms of density, the appropriate
+current units for standard mechanisms are  mA/cm2 and conductance units
+are mho/cm2. However, point process
+current units are nA and conductance units are umho.  These conventions
+ensure that the simulation is independent of the number of segments in a
+section (assuming the number of segments is large enough so spatial
+discretization error is small.
+
+<p>
+At the NEURON user level, all variables and functions associated with
+a POINT_PROCESS are accessed via the normal object syntax.
+A point process, call it pp
+is inserted into (or moved to)
+the currently specified section at location, <tt>0 < x < 1</tt>,
+with the function, <tt>pp.loc(x)</tt>.
+If a point process is created with no argument then it is not located
+anywhere. If an argument is present and there is a currently accessed
+section then the point process is placed there.
+At this time
+point process's are placed at the center of the nearest segment and may
+be placed explicitly at 0 or 1 (0 area segments at the ends of sections).
+
+<p>
+<tt>pp.has_loc()</tt> returns 1 if the point process is located in a section and
+returns 0 if not located. If a point process has no location then
+attempts to access its variables or get its location will produce an
+error message.
+
+<p>
+One finds the location of a point process via the function,
+<tt>x = pp.get_loc()</tt>.  The function returns the x location
+at the center of the segment where the process was placed and pushes
+the section name onto the stack so that it becomes the currently
+accessed section. The stack must be popped with <tt> pop_section()</tt> at
+a subsequent time. BE SURE TO POP THE SECTION STACK!  This can be 
+a dangerous function in the sense that if the stack is not popped, then
+section access is completely screwed up.
+
+<h2> <a name="POINTER">POINTER</a> name, ...</h2>
+<p>
+These names are pointer references to variables outside the model.
+They should be declared in the body of the description as normal variables
+with units and are used exactly like normal variables. The user is responsible
+for setting these pointer variables to actual variables at the
+hoc interpreter level. Actual variables are normal variables in other
+mechanisms, membrane potential, or any hoc variable. See below for how this
+connection is made. If a POINTER variable is ever used without being
+set to the address of an actual variable, NEURON may crash with a memory
+reference error, or worse, produce wrong results. Unfortunately the errors
+that arise can be quite subtle. For example, if you set a POINTER correctly
+to a mechanism variable in section a. And then change the number of segments in
+section a, the POINTER will be invalid because the memory used by
+section a is freed and might be used for a totally different purpose. It
+is up to the user to reconnect the POINTER to a valid actual variable.
+
+<h2><a name="EXTERNAL">EXTERNAL</a> name, name, ...</h2>
+<p>
+These names, which should be declared elsewhere as ASSIGNED or PARAMETER
+variables allow global variables in other models or NEURON c files to be
+used in this model. That is, the definition of this variable must appear
+in some other file. Note that if the definition appeared in another mod file
+this name should explicitly contain the proper suffix of that model.
+You may also call functions from other models (but don't ignore the warning;
+make sure you declare them as
+<pre>
+extern double fname_othermodelsuffix();
+</pre>
+in a VERBATIM block and use them with the proper suffix.
+
+<h1>Importing variables from other mechanisms -- connecting
+mechanisms from different locations.</h1>
+
+<p>
+Occasionally mechanisms need information from other mechanisms which may
+be located elsewhere in the neuron. Connecting pre and post synaptic
+point mechanisms is an obvious example. In the same vein, it may be useful
+to call a function from hoc which modifies some mechanism variables
+at a specific
+location. (Normally, mechanism functions callable from HOC should not
+modify range variables since the function doesn't know where the mechanism
+data for a segment is located. Normally, the pointers are set when NEURON
+calls the BREAKPOINT block and the associated SOLVE blocks.)
+
+<p>
+One kind of connection between mechanisms at the same point is through
+ionic mechanisms invoked with the USEION statement. In fact this is
+entirely adequate for local communication although treating an arbitrary
+variable as an ionic concentration may be conceptually strained.
+However it doesn't solve the problem of communication between mechanisms
+at different points.
+
+<h2> <a name="POINTER">POINTER</a> --- Communication at different points.</h2>
+<p>
+Basically what is needed is a way to implement the hoc statement
+<pre>
+section1.var1_mech1(x1) =  section2.var2_mech2(x2)
+</pre>
+efficiently from within a mechanism without having to explicitly connect them
+through assignment at the HOC level everytime the var2 might change.
+
+<p>
+First of all, the variables which point to the values in some other mechanism
+are declared within the NEURON block via
+<pre>
+NEURON {
+   POINTER var1, var2, ...
+}
+</pre>
+These variables are used exactly like normal variables in the sense that
+they can be used on the left or right hand side of assignment statements
+and used as arguments in function calls. They can also be accessed from HOC
+just like normal variables.
+It is essential that the user set up the pointers to point to the correct
+variables. This is done by first making sure that the proper mechanisms
+are inserted into the sections and the proper point processes are actually
+``located'' in a section. Then, at the hoc level each POINTER variable
+that exists should be set up via the command:
+<pre>
+	setpointer pointer, variable
+</pre>
+where pointer and variable have enough implicit/explicit information to
+determine their exact segment and mechanism location. For a continuous
+mechanism, this means the section and location information. For a point
+process it means the object. The variable may also be any hoc variable
+or voltage, v.
+
+<p>
+For example, consider a synapse which requires a presynaptic potential
+in order to calculate the amount of transmitter release. Assume the 
+declaration in the presynaptic model
+<pre>
+NEURON { POINTPROCESS Syn   POINTER vpre }
+</pre>
+Then
+<pre>
+objref syn
+somedendrite {syn = new Syn(.8)}
+setpointer syn.vpre, axon.v(1)
+</pre>
+will allow the syn object to know the voltage at the distal end of the axon
+section. As a variation on that example, if one supposed that the synapse
+needed the presynaptic transmitter concentration (call it tpre) calculated
+from a point process model called ``release'' (with object reference
+rel, say) then the
+statement would be
+<pre>
+setpointer syn.tpre, rel.AcH_release
+</pre>
+
+<p>
+The caveat is that tight coupling between states in different models
+may cause numerical instability. When this happens,
+merging models into one larger
+model may eliminate the instability.

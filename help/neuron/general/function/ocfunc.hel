@@ -1,0 +1,331 @@
+?p neuron.exe general functions
+?0 print_session
+@hsyn
+0 = print_session(useprinter, "name")
+0 = print_session(useprinter, "name", useselected)
+0 = print_session()
+@hdesc
+Print a postscript file consisting of certain windows on the screen.
+
+If useprinter==1 postscript is piped to the filter given by "name"
+which should be able to deal with standard input (UNIX). If useprinter==0
+the postscript is saved in the file specified by "name".
+
+If there is a third arg equal to 1 then the printed windows are those
+selected and arranged on the paper icon of the @aPWM and calling this function
+is equivalent to pressing the @aPrint#PWM button. Otherwise all
+printable windows are printed in landscape mode with a size such that
+the screen fits on the paper.
+
+If there are no arguments then all the windows are printed in way that
+works for mac, mswin, and unix.
+@h
+?0 save_session
+@hsyn
+0 = save_session("filename")
+0 = save_session("filename", "header")
+@hdesc
+Save all the (saveable) windows on the screen to filename.
+This is equivalent to pressing the @aSaveAll#Session button
+on the Print and File Window Manager ( @aPWM )
+If the header argument exists, it is copied to the beginning of
+the file.
+@hsee
+save#PWManager
+@h
+?0 prmat
+Prints the form of the matrix defined by @aeqn statements. Each nonzero
+element is printed as an "*".
+?0 solve
+Does one iteration of the non-linear system defined by @aeqn statements.
+Returns the linear norm of the difference between left and right hand sides
+plus the change in the dependent variables.
+?0 eqinit
+Throws away previous dependent variable and equation specifications
+from @aeqn statements.
+?0 sprint
+@hsyn
+sprint(strdef, "format", args)
+@hdesc
+Prints to a string. See @aprintf#IO
+@h
+?0 strcmp
+@hsyn
+x = strcmp("string1", "string2")
+@hdesc
+return negative, 0, or positive value
+depending on how the strings compare lexicographically.
+0 means they are identical.
+@h
+?0 startsw
+Initializes a stopwatch with a resolution of 1 second or 0.01 second if
+gettimeofday system call is available. See @astopsw .
+?0 stopsw
+Returns the time since the stopwatch was last initialized with a @astartsw .
+@code
+startsw()
+for i=1,1000000 { x = sin(.2) ]
+stopsw()
+@endcode
+@hbug
+Really the idiom
+@code
+x = startsw()
+//...
+startsw() - x
+@endcode
+should be used since it allows nested timing intervals.
+
+?0 object_id
+@hsyn
+object_id(objref)
+object_id(objref, 1)
+@hdesc
+Returns 0 if the object reference does not point to an object instance.
+(Otherwise returns the pointer cast to a double, not a very useful number)
+
+If the second argument is 1, it returns the index of the object name. Returns
+-1 if the object is the NULLObject.
+@h
+?0 allobjectvars
+@hsyn
+allobjectvars()
+@hdesc
+Prints all the object references (objref variables) that have been
+declared along with the class type of the object they reference and the
+number of references.
+@hbug
+Instead of printing the address of the object in hex format, it ought
+also to print the object_id and/or the internal instance name.
+@h
+?0 allobjects
+@hsyn
+allobjects()
+allobjects("templatename")
+nref = allobjects(objectref)
+@hdesc
+Prints the internal names of all class instances (objects) available
+from the interpreter along with the number of references to them.
+
+With a templatename the list is restricted to objects of that class.
+
+With an object variable, nothing is printed but the reference count
+is returned. The count is too large by one if the argument was of the
+form templatename[index] since a temporary reference is created while
+the object is on the stack during the call.
+@h
+?0 numarg
+@hsyn
+n = numarg()
+@hdesc
+Number of arguments passed to a user written hoc function.
+@hsee
+arguments argtype
+@h
+
+?0 argtype
+@hsyn
+itype = argtype(iarg)
+@hdesc
+The type of the ith arg. The return value is 0 for numbers, 1 for objref,
+2 for strdef, 3 for pointers to numbers, and -1 if the arg does not exist.
+@hsee
+arguments numarg
+@h
+
+?0 hoc_pointer_
+@hsyn
+hoc_pointer_(&variable)
+@hdesc
+A function used by c and c++ implementations to request a pointer to
+the variable from its interpreter name. Not needed by the user.
+@h
+?0 execute
+@hsyn
+execute("statement")
+execute("statement", objref)
+@hdesc
+ parse and execute the command in the context
+        of the object. If second arg not present then execute it at the
+        top level of the interpreter.
+        If command begins with a '~' then the tilda is removed and the rest
+        of the command is executed without enclosing it in {}. This allows
+        one to create a  func or proc dynamically.
+@hsee
+execute1
+@h
+?0 execute1
+@hsyn
+err = execute1("statement")
+err = execute1("statement", objref)
+err = execute1("statement", show_err_mes)
+err = execute1("statement", objref, show_err_mes
+@hdesc   
+Same as @aexecute but returns 0 if there was an interpreter error
+during execution of the statement and returns 1 if successful.
+Does not surround the command with {}.
+
+If the show_err_mes arg is present and equal to 0 then the normal
+interpreter error message printing is turned off for the scope of the
+statement.
+
+Error messages can be turned on even inside the statement
+with @ashow_errmess_always .
+
+Parse and execute the command in the context
+        of the object. If second arg not present then execute it at the
+        top level of the interpreter.
+
+@hex
+Execute1 is heavily used in the construction of the fitter widgets.
+It is also useful to objects in gaining information about the outside with
+the idiom
+@code
+sprint(cmd, "%s.var = outside_var", this)
+execute1(cmd)
+@endcode
+Here, outside_var is unavailable from within the object and so
+a command is constructed which can be executed at the top level where that
+variable is available and sets the public var in the object.
+@h
+?0 load_proc
+@hsyn
+load_proc("name1", ...)
+load_func("name1", ...)
+load_template("name1", ..._
+@hdesc
+Load the file containing a definition.
+
+For each name in the list
+all the *.oc and *.hoc files will be searched and the first file that
+contains the appropriate proc, func, or begintemplate will be loaded.   
+Loading only takes place if the name has not previously been defined.
+The search path consists of the current working directory, followed by
+the paths in the environment variable HOC_LIBRARY_PATH (space separated),
+followed by $NEURONHOME/lib/hoc.
+Remember that only entire files are loaded-- not just the definition of
+the name. And nothing is loaded if the name is already defined.
+Inadvertent recursion will use up all the file descriptors.
+For efficiency, on the first load, all the names are cached in a
+temporary file and the file is scanned on subsequent loads for that session.
+
+@hbug
+This command is very slow under mswindows. Therefore it is often
+useful to explicitly load the standard run library with the statement:
+@code
+xopen("$(NEURONHOME)/lib/hoc/noload.hoc")
+@endcode
+@h
+?0 load_file
+@hsyn
+load_file("filename")
+load_file("filename", "name")
+load_file(0or1, "filename")
+@hdesc
+Similar to @aload_proc but loads files and so does not have the
+search overhead. Suitable for loading packages of files.
+
+The functionality is identical to @axopen except that the xopen takes
+place only if
+if a file of that name has not already been loaded with the load_file,
+@aload_proc , @aload_template , or @aload_func functions.
+The file is searched for in the current working
+directory, $HOC_LIBRARY_PATH (a colon or space separated list of directories),
+and $NEURONHOME/lib/hoc directories (in that order) for
+the file if there is no directory prefix.
+Before doing the xopen on the file the current working directory is
+temporarily changed to the directory containing the file so
+that it can xopen files relative to its location.
+
+If the second string arg exists, the file is xopen'ed only if the
+name is not defined as a variable AND the file has not been loaded
+with load_file. This is useful in those cases where the package was
+first xopen'ed without going through the load_file function.
+
+If the first arg is a number and is 1, then the file is loaded again even
+if it has already been loaded.
+@h
+@hdesc
+?0 load_func
+see @aload_proc
+?0 load_template
+see @aload_proc
+?0 machine_name
+@hsyn
+strdef name
+machine_name(name)
+@hdesc
+returns the hostname of the machine.
+@h
+?0 saveaudit
+Not completely implemented at this time. Saves all commands executed
+by the interpreter.
+?0 retrieveaudit
+Not completely implemented at this time. See @asaveaudit .
+?0 coredump_on_error
+@hsyn
+coredump_on_error(1 or 0)
+@hdesc
+On unix machines, sets a flag which requests (1) a coredump in case
+of memory or bus errors.
+@h
+
+?0 quit
+Exits the program. Can be used as the action of a button. If edit buffers
+are open you will be asked if you wish to save them before the final exit.
+?0 object_push
+@hsyn
+object_push(objref)
+@hdesc
+Enter the context of the object referenced by objref. In this context you
+can directly access any variables or call any functions, even those not
+declared as @apublic . Do not attempt to create any new symbol names!
+This function is generally used by the object itself to save its state
+in a session.
+@h
+?0 object_pop
+@hsyn
+object_pop()
+@hdesc
+Pop the last object from an @aobject_push .
+@h
+?0 show_errmess_always
+@hsyn
+show_errmess_always(boolean)
+@hdesc
+Sets or turns off a flag which, if on, always prints the error message even
+if normally turned off by an @aexecute1 statement or other call to the
+interpreter.
+@h
+?0 name_declared
+@hsyn
+type = name_declared("name")
+type = name_declared("name", 1)
+@hdesc
+Return 0 if the name is not in the symbol table. The first form looks
+for names in the top level symbol table. The second form looks in the
+current object context.
+
+If the name exists return
+
+ 2 if an @aobjref .
+
+ 3 if a Section
+
+ 4 if a @astrdef
+
+ 5 if a scalar or @adouble variable.
+
+ 1 otherwise
+
+Note that names can be (re)declared only if they do not already
+exist or are already of the same type.
+This is too useful to require the user to waste an objref in creating a
+@aStringFunctions class to use @ais_name#StringFunctions.
+@code
+name_declared("nrnmainmenu_")
+{object_push(nrnmainmenu_) print name_declared("ldfile", 0) object_pop()}
+{object_push(nrnmainmenu_) print name_declared("ldfile", 1) object_pop()}
+@endcode
+@h
+

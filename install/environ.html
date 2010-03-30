@@ -1,0 +1,33 @@
+<title>Environment for NEURON</title>
+
+<h1>Update your Environment</h1>
+NEURON makes heavy use of its installation location to find scripts, libraries,
+and other things it needs and it tries to find them using the environment
+variables NEURONHOME and CPU.
+
+Set the NEURONHOME environment variable to the directory you extracted
+the NEURON tar files into. For illustrative purposes I assume you did this
+in /usr/local/neuron
+and that that is your current working directory.
+
+Set the CPU environment variable to the name that results when you
+execute
+<pre>
+make CPU
+</pre>
+For illustrative purposes call it SUN4.
+
+If your shell is the a c-shell add the following to your .cshrc file.
+<pre>
+setenv NEURONHOME /usr/local/neuron
+setenv CPU SUN4
+set path=($path $NEURONHOME/bin $NEURONHOME/bin/$CPU interviews_path/bin/${CPU})
+setenv LD_LIBRARY_PATH=$NEURONHOME/bin/${CPU}:interviews_path/lib/${CPU}
+</pre>
+These changes will take effect immediately if you execute:
+<pre>
+source $home/.cshrc
+</pre>
+
+For other shells the info to add is the same -- only the syntax differs.
+

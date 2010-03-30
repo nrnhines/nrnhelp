@@ -1,0 +1,433 @@
+?1 Random
+Random 
+@hsyn
+Random()
+Random(@varseed)
+Random(@varseed, @varsize)
+@hdesc
+The Random class provides commonly used random distributions which are
+useful for stochastic 
+simulations. The default distribution is normal with mean = 0 and standard
+deviation = 1.
+
+This class is an interface to the RNG class
+from the gnu c++ class library. As of version 5.2, a cryptographic quality
+RNG class wrapper for @amcell_ran4#functions was added and is available
+with the @aMCellRan4#Random method. The current default random generator
+is @aACG#Random .
+
+Note that multiple instances of the Random class will produce different
+streams of random numbers only if their seeds are different.
+
+One can switch distributions at any time but if the distribution is
+stationary then it is more efficient to use r.repick() to avoid
+constructor/destructor overhead.
+
+@hex
+@code
+objref r
+r = new Random()
+for i=1,10 print r.uniform(30, 50) // not as efficient as
+for i=1,10 print r.repick()	   // this
+@endcode
+prints 20 random numbers ranging in value between 30 and 50.
+
+@h
+
+? ACG
+@hsyn
+r.ACG()
+r.ACG(@varseed)
+r.ACG(@varseed, @varsize)
+@hdesc
+Use a variant of the Linear Congruential Generator (algorithm M)
+described in Knuth, Art of Computer Programming, Vol. III in
+combination with a Fibonacci Additive Congruential Generator.  This is
+a "very high quality" random number generator, Default size is 55,
+giving a size of 1244 bytes to the structure. Minimum size is 7 (total
+100 bytes), maximum size is 98 (total 2440 bytes).
+@h
+  
+? MLCG
+@hsyn
+r.MLCG()
+r.MLCG(@varseed1)
+r.MLCG(@varseed1, @varseed2)
+@hdesc
+Use a Multiplicative Linear Congruential Generator.  Not as high
+quality as the ACG.  It uses only 8 bytes.
+@h
+
+? MCellRan4
+@hsyn
+highindex = r.MCellRan4()
+highindex = r.MCellRan4(highindex)
+highindex = r.MCellRan4(highindex, lowindex)
+@hdesc
+Use the MCell variant of the Ran4 generator. See @amcell_ran4#functions .
+In the no argument case or if the highindex is 0, then the system selects
+an index which is the random 32 bit integer resulting from
+an mcell_ran4 call with an index equal to the
+the number of instances of the Random generator that had been created.
+Thus, each stream should be statistically independent as long as the
+highindex values differ by more than the eventual length of the stream.
+In any case, the
+initial highindex is returned and can be used to restart an instance
+of the generator. Use @amcell_ran4_init#functions to set the (global)
+low 32 bit index of the generator. The @aseq#Random method is useful
+for getting the current sequence number and restarting at that sequence
+number (highindex).
+If the lowindex arg is present and nonzero, then that lowindex is used
+instead of the global one specified by @amcell_ran4_init#functions .
+This allows 2^32-1 independent streams that do not overlap.
+@hex
+@execcode mcunif
+@code
+objref r, vec, g1, g2, hist
+r = new Random()
+index = r.MCellRan4()
+r.uniform(0, 2)
+vec = new Vector(1000)
+g1 = new Graph()
+g2 = new Graph()
+g1.size(0, 1000, 0, 2)
+g2.size(0, 2, 0, 150)
+
+proc doit() {
+	g1.erase() g2.erase()
+	vec.setrand(r)
+	hist = vec.histogram(0, 2, 0.2)
+	vec.line(g1)
+	hist.line(g2, .2)
+	g1.flush g2.flush
+}
+doit()
+
+variable_domain(&index, 0, 2^32-1)
+xpanel("MCellRan4 test")
+xbutton("Sample", "doit()")
+xpvalue("Original index", &index, 1, "r.MCellRan4(index) doit()")
+xpanel()
+@endcode
+@h
+
+? seq
+currenthighindex = r.seq()
+r.seq(sethighindex)
+@hdesc
+Gets and sets the current highindex value when the @aMCellRan4#Random is
+in use. This allows restarting the generator at any specified point.
+Note that the currenthighindex value is incremented every @arepick#Random .
+Usually the increment is 1 but some distributions, e.g. @apoisson#Random
+can increment by more. Also, some distributions, e.g. @anormal#Random ,
+pick twice on the first repick but once thereafter.
+@hex
+@execcode seq
+@code
+objref r
+r = new Random()
+//r.uniform(0,1)
+r.negexp(1)
+//r.normal(0,1)
+mcell_ran4_init(1)
+r.MCellRan4(1)
+
+for i=0, 10 print i, r.repick
+
+r.MCellRan4(1)
+for i=0, 5 print i, r.repick
+idum = r.seq
+print "idum = ", idum
+for i=6, 10 print i, r.repick
+
+print "restarting"
+r.seq(idum)
+for i=6, 10 print i, r.repick
+
+print "restarting"
+r.seq(idum)
+for i=6, 10 print i, r.repick
+@endcode
+@h
+
+? repick
+@hsyn
+r.repick()
+@hdesc
+Pick again from the distribution last used.
+@h
+
+? play
+@hsyn
+r.play(&var)
+@hdesc
+At the beginning of every call to @afadvance and @afinitialize var is set
+to a new value equivalent to
+@code
+var = r.repick()
+@endcode
+(but with no interpreter overhead). This is similar in concept to @aplay#Vector .
+Play may be called several times for different variables and each variable
+will get an independent random value but with the same distribution.
+To disconnect the Random object from its list of variables, either the variables
+or the Random object must be destroyed.
+@hex
+@code
+// run the single script
+// use the PointProcessManager to select IClamp
+// set dur of IClamp[0] to 100
+// open a new Voltage Graph
+objref r
+r = new Random()
+r.poisson(.01)
+r.play(&IClamp[0].amp)
+//open a RunControl
+// press Init&Run several times
+@endcode
+? uniform
+@hsyn
+r.uniform(@varlow, @varhigh)
+@hdesc
+Create a uniform random variable over the open interval @varlow...@varhigh].
+@hex
+@execcode uniform
+@code
+objref r, vec, g1, g2, hist
+r = new Random()
+r.uniform(0, 2)
+vec = new Vector(1000)
+vec.setrand(r)
+hist = vec.histogram(0, 2, 0.2)
+
+g1 = new Graph()
+g2 = new Graph()
+g1.size(0, 1000, 0, 2)
+g2.size(0, 2, 0, 150)
+vec.plot(g1)
+hist.plot(g2, .2)
+@endcode
+@h
+
+? discunif
+@hsyn
+r.discunif(@varlow, @varhigh)
+@hdesc
+Create a uniform random variable over the discrete integers from
+low to high.
+@h
+
+? normal
+@hsyn
+r.normal(@varmean, @varvariance)
+@hdesc
+Gaussian distribution.
+@hex
+@execcode rand1
+@code
+objref r, g, hist, vec
+r = new Random()
+r.normal(-1, .5)
+
+vec = new Vector()
+vec.indgen(-3, 2, .1)	// x-axis for plot
+hist = new Vector(vec.size())
+g = new Graph()
+g.size(-3, 2, 0, 50)
+hist.plot(g, vec)
+for(i=0; i<500; i=i+1){
+	x = r.repick()
+	print i, x
+	j = int((x+3)*10) // -3 to 2 -> 0 to 50
+	if (j >= 0) {
+		hist.x[j] = hist.x[j]+1
+	}
+	g.flush()
+	doNotify()
+}
+@endcode
+@h
+
+? lognormal
+@hsyn
+r.lognormal(@varmean, @varvariance)
+@hdesc
+Create a logarithmic normal distribution.
+@hex
+@execcode rand2
+@code
+objref r, g, hist, xvec
+r = new Random()
+r.lognormal(5,2)
+n=20
+xvec = new Vector(n*3)	// bins look like discrete spikes
+for i=0,n-1 {
+	xvec.x[3*i] = i-.1
+	xvec.x[3*i+1] = i
+	xvec.x[3*i+2] = i+.1
+}
+hist = new Vector(xvec.size())
+g = new Graph()
+g.size(0, 15, 0, 120)
+hist.plot(g, xvec)
+for(i=0; i<500; i=i+1){
+	x = r.repick()
+	print i, x
+	j = int(x)
+	j = 3*j+1
+	if (j >= hist.size()) { // don't let any off the edge
+		j = hist.size() -1
+	}
+	hist.x[j] = hist.x[j]+1
+	g.flush()
+	doNotify()
+}
+@endcode
+@h
+
+? poisson
+@hsyn
+r.poisson(@varmean)
+@hdesc
+Create a poisson distribution.
+@hex
+@execcode rand3
+@code
+objref r, g, hist, xvec
+
+r = new Random()
+r.poisson(3)
+
+n=20
+xvec = new Vector(n*3)
+for i=0,n-1 {
+	xvec.x[3*i] = i-.1
+	xvec.x[3*i+1] = i
+	xvec.x[3*i+2] = i+.1
+}
+hist = new Vector(xvec.size())
+g = new Graph()
+g.size(0, 15, 0, 120)
+hist.plot(g, xvec)
+for(i=0; i<500; i=i+1){
+	x = r.repick()
+	print i, x
+	j = int(x)
+	j = 3*j+1
+	if (j >= hist.size()) {
+		j = hist.size() -1
+	}
+	hist.x[j] = hist.x[j]+1
+	g.flush()
+	doNotify()
+}
+@endcode
+@h
+
+? binomial
+@hsyn
+r.binomial(@varN,@varp)
+@hdesc
+Create a binomial distribution. Returns the number of "successes" after
+@varN trials when the probability of a success after one trial is @varp.
+(n>0, 0<=p<=1).
+
+P(n, N, p) = p * P(n-1, N-1, p) + (1 - p) * P(n, N-1, p)
+@hex
+@execcode binomial
+@code
+objref r, hist, g
+r = new Random()
+r.binomial(20, .5)
+
+g = new Graph()
+g.size(0, 20, 0, 100)
+hist = new Vector(20)
+hist.plot(g)
+for(i=0; i<500; i=i+1){
+	j = r.repick()
+	hist.x[j] = hist.x[j]+1
+	g.flush()
+	doNotify()
+}
+@endcode
+@h
+
+? geometric
+@hsyn
+r.geometric(@varmean)
+@hdesc
+Create a discrete geometric distribution.
+Given 0<=@varmean<=1, return the number of uniform random samples
+that were drawn before the sample was larger than the @varmean (always
+greater than 0.
+@hex
+@execcode geomet
+@code
+objref r, hist, g
+r = new Random()
+r.geometric(.8)
+hist = new Vector(1000)
+proc sample() {
+	hist = new Vector(1000)
+	hist.setrand(r)
+	hist = hist.histogram(0,100,1)
+	hist.plot(g)
+}
+g = new Graph()
+g.size(0,40,0,200)
+sample()
+xpanel("Resample")
+xbutton("Resample", "sample()")
+xpanel()
+@endcode
+@h
+
+? hypergeo
+@hsyn
+r.hypergeo(@varmean,@varvariance)
+@hdesc
+Create a hypergeometric distribution.
+@h
+
+? negexp
+@hsyn
+r.negexp(@varmean)
+@hdesc
+Create a negative exponential distribution. Distributed as the intervals
+between events in a poisson distribution.
+@hex
+@execcode negexp
+@code
+objref r, hist, g
+r = new Random() 
+r.negexp(2.5) 
+hist = new Vector(1000)
+proc sample() {
+        hist = new Vector(1000)
+        hist.setrand(r)
+        hist = hist.histogram(0,20,.1)
+        hist.plot(g, .1)
+}
+g = new Graph()
+g.size(0,20,0,50)
+sample()
+xpanel("Resample")
+xbutton("Resample", "sample()")
+xpanel()
+@endcode
+@h
+    
+? erlang
+@hsyn
+ r.erlang(@varmean,@varvariance)
+@hdesc
+Create an Erlang distribution.
+@h
+
+? weibull
+@hsyn
+ r.weibull(@varalpha,@varbeta)
+@hdesc
+Create a Weibull distribution.
+@h
+

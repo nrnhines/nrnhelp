@@ -1,0 +1,33 @@
+<title> Building NEURON </title>
+
+<h1> Building NEURON </h1>
+
+<h2> Non-graphical interface part </h2>
+Execute the shell script:
+<pre>
+	InstallNRNOC
+</pre>
+This builds the non-graphical interface portion of NEURON (c code).
+All the messages
+during the build process are saved in nrnocworld. If everything worked
+there will be an executable created in bin/$CPU called nrnoc.
+Also there should be a libmesch... and libcvode.. in lib/$(CPU)
+
+<h2> Graphical interface part</h2>
+Execute the shell script:
+<pre>
+	InstallNRNIV
+</pre>
+If successful you will end up with an executable called nrniv.
+If the NEURONHOME environment variable is set, it can be tested with
+<pre>
+	cd $NEURONHOME/demo
+	$NEURONHOME/bin/$CPU/nrniv demo.hoc
+</pre>
+but you won't be able to run the release demo since the necessary
+membrane mechanisms are not installed in nrniv.
+To test the full release mechanism part of the demo run
+<pre>
+neurondemo
+</pre>
+

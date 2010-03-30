@@ -1,0 +1,24 @@
+<TITLE>NEURON as a mosaic/netscape viewer</TITLE>
+<H1>Installation for NETSCAPE under MSWINDOWS</H1>
+
+
+When you download a simulation file with a .hoc or .nrnzip extension you can
+automatically run it by putting the following lines in the netscape.ini file:
+<pre>
+[Suffixes]
+application/neuron=hoc,nrn
+[Viewers]
+application/neuron=D:\NRN\BIN\MOS2NRN.EXE
+TYPE0=application/neuron
+<pre>
+
+or else set the same thing up from within netscape using
+options/preferences/helper_applications from the main netscape panel.
+<p>
+Warning: There is no security with this feature since .hoc files can
+execute arbitrary shell scripts. If you do not install it you can always
+download the file into some name, examine it, and then execute it explicitly
+with NEURON.
+
+<H1><a href = "viewer.html">Installation for MOSAIC under UNIX</a></H1>
+

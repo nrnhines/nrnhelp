@@ -1,0 +1,49 @@
+<TITLE>Controlling NEURON from Mosaic</TITLE>
+<H1>Sending commands to NEURON from mosaic</H1>
+<p>
+It is inefficient to start a separate neuron viewer for every downloaded hoc
+file and it is often the case that a mosaic document would like to
+lead the user through a sequence of simulations using a single neuron
+process. It takes time to start a large neuron process, but once it is started
+it is very fast to send various hoc files to it for execution.
+
+<p>
+To install this feature you need to edit two files in your
+home directory: .mime.types and .mailcap <br>
+
+<p>
+Add the following lines to $HOME/.mime.types <br>
+<pre>
+application/neuron	hoc
+</pre>
+
+<p>
+Add the following lines to $HOME/.mailcap <br>
+<pre>
+application/neuron; mos2nrn %s
+</pre>
+
+<p>
+Now you can start a neuron process on your machine and execute the contents
+of a hoc file when you press
+<a href="temp1.hoc">start</a>.
+If you did press it, what you eventually see is an xterm running neuron
+with a little notice that it is accepting input from a pipe.
+Any commands coming from the pipe are prefixed with a prompt showing
+the name of the pipe. This does not preclude typing direct commands to
+the xterm or operating any graphical interface elements of the neuron
+process. For example one of the things done by the "start" script was to
+set the value of t to 25. Check this out by typing
+<a href="temp2.hoc">  t  </a> in the xterm window.
+<p>
+Press the following in sequence to see an action potential:<br>
+
+<a href="temp3.hoc">start the neuron main menu </a><br>
+<a href="temp5.hoc">insert hh</a><br>
+<a href="temp4.hoc">start up an inserter</a> so we can see what mechanisms
+are present <br>
+<a href="temp6.hoc">set up a current stimulus</a><br>
+<a href="temp6b.hoc">show a graph to plot the voltage</a><br>
+<a href="temp7.hoc">run</a><br>
+<a href="temp8.hoc"> quit</a> See how everything goes away.<br>
+<p>

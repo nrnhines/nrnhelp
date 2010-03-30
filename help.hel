@@ -1,0 +1,104 @@
+?0 help
+?1 StartingHelpFromNEURON
+Neuron help system
+
+The NeuronHelp window is invoked from the neuron interface by pressing
+the "Help" button on the "PrintWindowManager" window.  This help button
+toggles between help mode and normal mode actions for mouse button
+presses.  In help mode, the mouse cursor turns into a "?" whenever the
+mouse is over a window for which help is available.  When the "?" cursor
+is present subsequent mouse button presses cause a hopefully appropriate
+message to appear in the document viewer of the help system. 
+
+You may also invoke by typing at the console:
+help
+help word
+
+?0 help UsingHelp
+How to use the help system.
+
+The top half of the help window contains a series of browsers.  Pressing
+the left mouse button once on a word in one of these browsers
+immediately shows the help message in the lower half (HelpViewer) of the
+help window.  Double clicking not only shows the help message but
+changes the words shown in the browsers by making that word the
+CurrentContext. 
+
+? HelpViewer
+
+Selecting a word (left mouse button) in the lower document viewer
+changes the PossibleContext browser to display all the contexts that
+contain that word in their help message.  The help document being viewed
+may be scrolled with the scroll bar, pressing and dragging the middle
+mouse button (position scrolling), or pressing and dragging the right
+mouse button (velocity scrolling).  The help file being viewed is
+indicated in the label above the viewer.  The current view of the
+document can be copied to a transient window by pressing the "NewView"
+button.  New views can be scrolled but are disconnected from the context
+browsers.  They are good for retaining multiple help messages on the
+screen and can be dismissed with their "Dismiss" button. 
+
+?1 HelpContext
+
+Uniquely defines a help message and its location in the help hierarchy
+of contexts.  A context has a single parent and many children.  It can
+have more than one name and a name does not uniquely identify a context. 
+(e.g.  unmap is a name for a child context of Graph, HBox, etc. 
+
+? CurrentContext
+
+Select this to show the help message for this context in the HelpViewer. 
+This context defines what appears in the ParentContext and
+ChildrenContext browsers. 
+
+? HistoryContext
+A list of the contexts that have appeared in the CurrentContext browser.
+
+? ParentContext
+Parent of the CurrentContext
+
+? ChildrenContext
+Children of the CurrentContext
+
+? PossibleContexts
+
+Selecting a new CurrentContext (eg.  double clicking on an item in one
+of the context browsers) or selecting a word in the HelpViewer
+generates a list of all  contexts having the same name each preceded by
+its parent context. Following this list are all the contexts
+that contain this word in their help message. 
+
+?0 help
+?1 WritingHelpMessages
+
+The help system reads all the *.help files first from directory
+$NEURONHOME/ochelp and then reads the *.help files from
+$NEURONHOME/lib/help in alphabetical order.  Help messages consist of
+plain ascii text introduced by a line beginning with the character '?'
+that uniquely identifies the help context.  No formatting is done by the
+HelpViewer except to strip the initial '?n' from a context definition. 
+
+     ?0 context0 context1 context2 ...
+
+defines the path from the root of the context tree to where new contexts
+will be added into the hierarchy.  This should be the first line in a
+help file but may occur several times. 
+
+     ?1 name name name
+
+defines the names (usually just one) of a new context which is added to
+the context path till another ?1 definition. 
+
+     ?2 name name name
+
+defines the names (usually just one) of a new context.  Subsequent lines
+up to the next context definition (line beginning with '?') become
+children of the current context path. 
+
+     ? ...name...
+
+The first alphanumeric string becomes the name of a new context that
+includes this line. 
+
+
+

@@ -1,0 +1,123 @@
+? trigavg
+@hsyn
+v1.trigavg(@vardata,@vartrigger,@varpre,@varpost)
+@hdesc
+Perform an event-triggered average of <@vardata> using times given by
+<@vartrigger>. The duration of the average is from -<@varpre> to <@varpost>.
+This is useful, for example, in calculating a spike triggered stimulus
+average.
+@h
+
+? spikebin
+@hsyn
+v.spikebin(@vardata,@varthresh)
+@hdesc
+Used to make a binary version of a spike train.  <@vardata> is a vector
+of membrane potential.  <@varthresh> is the voltage threshold for spike
+detection.  <@varv> is set to all zeros except at the onset of spikes
+(the first dt which the spike crosses threshold)
+@h
+
+? psth
+@hsyn
+vmeanfreq = vdest.psth(@varvsrchist,@vardt,@vartrials,@varsize)
+@hdesc
+The name of this function is somewhat misleading, since its
+input, vsrchist, is a finely-binned post-stimulus time histogram,
+and its output, vdest, is an array whose elements are the mean
+frequencies f_mean[i] that correspond to each bin of vsrchist.
+
+For bin i, the corresponding mean frequency f_mean[i] is
+determined by centering an adaptive square window on i and
+widening the window until the number of spikes under the
+window equals size.  Then f_mean[i] is calculated as
+
+@{  f_mean[i] = N[i] / (m dt trials) @}
+
+where
+@pre
+  f_mean[i] is in spikes per _second_ (Hz).
+  N[i] = total number of events in the window
+           centered on bin i
+  m = total number of bins in the window
+           centered on bin i
+  dt = binwidth of vsrchist in _milliseconds_
+           (so m dt is the width of the window in milliseconds)
+  trials = an integer scale factor
+@endpre
+
+trials is used to adjust for the number of traces that were
+superimposed to compute the elements of vsrchist.  In other words,
+suppose the elements of vsrchist were computed by adding up the
+number of spikes in n traces
+@pre
+              n
+  v1.x[i] = SUMMA # of spikes in bin i of trace j
+            j = 1
+@endpre
+Then trials would be assigned the value n.  Of course, if
+the elements of vsrchist are divided by n before calling psth(),
+then trials should be set to 1.
+
+Acknowledgment:
+The documentation and example for psth was prepared by Ted Carnevale.
+@hbug
+The total number of spikes in vsrchist must be greater than size.
+@hex
+@execcode psth
+objref g1, g2, b
+b = new VBox()
+b.intercept(1)
+g1 = new Graph()
+g1.size(0,200,0,10)
+g2 = new Graph()
+g2.size(0,200,0,10)
+b.intercept(0)
+b.map("psth and mean freq")
+@code
+VECSIZE = 200
+MINSUM = 50
+DT = 1000	// ms per bin of v1 (vsrchist)
+TRIALS = 1
+
+objref v1, v2
+v1 = new Vector(VECSIZE)
+  
+objref r
+r = new Random()
+           
+  
+for (ii=0; ii<VECSIZE; ii+=1) {
+	v1.x[ii] = int(r.uniform(0,10))
+}
+v1.plot(g1)
+
+v2 = new Vector()
+v2.psth(v1,DT,TRIALS,MINSUM)
+v2.plot(g2)
+@endcode
+@h
+
+? inf
+@hsyn
+v.inf(@vari,@vardt,@vargl,@varel,@varcm,@varth,@varres,[@varref])
+@hdesc
+Simulate a leaky integrate and fire neuron.  <@vari> is a vector containing
+the input.  <@vardt> is the timestep.  <@vargl> and <@varel> are the conductance
+and reversal potential of the leak term <@varcm> is capacitance.  <@varth>
+is the threshold voltage and <@varres> is the reset voltage. <@varref>, if
+present sets the duration of ab absolute refractory period.
+ 
+N.b. Currently working with forward Euler integration, which may give
+spurious results.
+@h
+
+
+? resample
+@hsyn
+v1.resample(@varv2,@varrate)
+@hdesc
+Resamples the vector at another rate -- integers work best.
+@hsee
+copy
+@h

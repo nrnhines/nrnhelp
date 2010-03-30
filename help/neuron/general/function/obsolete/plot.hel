@@ -1,0 +1,71 @@
+? axis
+See @aplot
+? plotx
+? ploty
+? regraph
+See @agraph#obsolete
+? plot
+
+@hname
+plot, axis - plot relative to scale given by axes
+
+@hsyn
+@{axis(@varargs)@}
+@{plot(@varmode)@}
+@varinrange = plot(@varx,@vary)
+
+@hdesc
+@{Plot()@} plots relative to the origin and scale defined by
+calls to axis.  The default x and y axes have relative units of 0 to 1 with the plot
+located in a 5x3.5 inch area.
+
+@hopt
+@dl
+@dt @{plot()@}
+@dd print parameter usage help lines.
+@dt @{plot(0)@}
+@dd subsequent calls will plot points.
+@dt @{plot(1)@}
+@dd next call will be a move, subsequent call will draw lines.
+@dt @{plot(@varx, @vary)@}
+@dd plots a point (or vector) relative to the axis scale.
+                Return value is 0 if the point is clipped (out of range).
+@dt @{plot(@varmode, @varx, @vary)@}
+@dd Like @{plt()@} but with scale and origin given by axis().
+@dt @{axis()@}
+@dd draw axes with label values. Closes plot device.
+@dt @{axis(@varclip)@}
+@dd points are not plotted if they are a factor clip off the axis scale.
+              Default is no clipping. Set clip to 1 to not plot out of axis region.
+              A value of 1.1 allows plotting slightly outside the axis boundaries.
+@dt @{axis(@varxorg, @varxsize, @varyorg, @varysize)@}
+@dd Size and location of the plot region.
+                (Use the plt() absolute coordinates.)
+@dt @{axis(@varxstart, @varxstop, @varnticx, @varystart, @varystop, @varnticy)@}
+@dd Determines relative scale and origin.
+@endl
+
+Specification of the precision of axis tic labels is available by
+recompiling hoc/SRC/plot.c with @{#define Jaslove 1+@}. With this definition,
+the number of tics specified in the 3rd and 6th arguments of @{axis()@} should
+be of the form m.n. m is the number of tic marks, and n is the number of
+digits after the decimal point which are printed. This contribution was
+made by Stewart Jaslove.
+
+@hex
+@code
+proc plotsin() { /* plot the sin function from 0 to 10 radians */
+   axis(0, 10, 5, -1, 1, 2) /* setup scale */
+   plot(1)
+   for (x=0; x<=10; x=x+.1) {
+      plot(x, sin(x)) /* plot the function */
+   }
+   axis() /* draw the axes */
+}
+@endcode
+
+@hsee
+plt, setcolor, axis
+
+@h
+

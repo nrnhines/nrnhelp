@@ -1,0 +1,18 @@
+?1 Notification
+? doEvents
+@hsyn
+	 doEvents()
+@hdesc Deal with any pending events in the middle of a computation.
+	This also causes any previous flushes to make their effect felt on
+	the screen.
+
+	Faster than @adoNotify since field editors are not updated.
+@h
+
+? doNotify
+@hsyn
+ doNotify()
+@hdesc
+ All panels are updated so field editors show current values.
+This is slower than @adoEvents which does not check the field editors.
+@h

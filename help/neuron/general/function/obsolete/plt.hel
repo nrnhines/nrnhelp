@@ -1,0 +1,102 @@
+? setcolor
+obsolete. See @aplt .
+? settext
+obsolete. See @aplt .
+? plt
+
+@hname
+plt, setcolor- low level plot functions
+
+@hsyn
+@{plt(@varmode)@}
+@{plt(@varmode, @varx, @vary)@}
+@{setcolor(@varcolorval)@}
+
+@hdesc
+@{Plt()@} plots points, lines, and text using
+the Tektronix 4010 standard. Absolute
+coordinates of the lower left corner and upper right corner of the plot
+region are (0,0) and (1000, 780) respectively.
+@{Setcolor()@} sets the color (or pen number for HP plotter)
+
+TURBO-C graphics drivers for VGA, EGA, CGA, and Hercules are automatically
+selected when the first plotting command is executed. An HP7475 compatible
+plotter may be connected to COM1:.
+
+@hopt
+@dl
+@dt @{plt(-1)@}
+@dd Place cursor in home position.
+@dt @{plt(-2)@}
+@dd Subsequent text printed starting at current coordinate position.
+@dt @{plt(-3)@}
+@dd Erase screen, cursor in home position.
+@dt @{plt(-5)@}
+@dd Open HP plotter on PC.
+@dt @{setcolor()@}
+@dd The plotter will stay open till another @{plt(-5)@} is executed.
+@dt @{plt(0, x, y)@}
+@dd Plot point.
+@dt @{plt(1, x, y)@}
+@dd Move to point without plotting.
+@dt @{plt(2, x, y)@}
+@dd Draw vector from former position to new position given by (x,y).
+                (@varmode can be any number >= 2)
+@endl
+Several extra options are available for X11 graphics.
+@dl
+@dt @{plt(-4, x, y)@} 
+@dd Erases area defined by previous plot position and
+the point, (x, y).
+@dt @{plt(-5)@}
+@dd  Fast mode. By default, the X11 server is flushed on every
+plot command so one can see the plot as it develops. Fast mode caches plot
+commands and only flushes on @{plt(-1)@} and @{setcolor()@}.  Fast mode is
+three times faster than the default mode.  It is most useful when
+plotting is the rate limiting step of the simulation.
+@dt @{plt(-6)@}
+@dd X11 server flushed on every plot call.
+@endl
+When the graphic window is resized, hoc is notified after
+the next erase command.
+
+Argument to @{setcolor()@} produces the following screen
+colors with an EGA adapter, X11 graphics:
+@table
+0      black  (pen 1 on HP plotter)		black
+1      blue					white
+2      green					yellow
+3      cyan					red
+4      red					green
+5      magenta					blue
+6      brown					violet
+7      light gray  (pen 1 on HP plotter)	cyan
+...
+15	white					green	
+@endtable
+
+@hex
+@code
+proc plotsin() { /* This procedure plots the sin function in red.*/
+   setcolor(4)
+   plt(1, 100, 500)  plt(2, 100, 100) /* y-axis*/
+   plt(1, 100, 300)  plt(2, 600, 300) /* x-axis*/
+   plt(1, 200, 550)
+   plt(-2)  print "SIN(x) from 0 to 2*PI" /* label*/
+   for(i=0; i<=100;i=i+1){
+      plt(i+1, i*500/100, 300 + 200*sin(2*PI*i/100))
+   }
+   plt(-1) /* close plot */
+}
+@endcode
+
+@hsee
+plot, axis, lw
+
+@hbugs
+EGA adaptor used extensively but CGA and Hercules used hardly at all.
+
+When the X11 graphic window is killed, hoc exits without asking about
+unsaved edit buffers.
+
+@h

@@ -1,0 +1,287 @@
+?p neuron.exe neuron classes
+
+?1 KSChan
+@hsyn
+kschan = new KSChan()
+@hdesc
+Declare and manage a new density channel type which can
+be instantiated in sections with the @ainsert#keywords
+statement. After the type comes into existence it
+is always a valid type and the conductance style,
+ligands, name, gating functions, etc can be changed
+at any time. The type cannot be destroyed.
+
+This is an extension of the KSChan managed by the
+Java catacomb channel builder tool
+for the past several
+years. The primary functional extension is the
+ability to define HH-style gates in addition to
+kinetic scheme gates. The administrative extensions
+allowed a more convenient re-implementation of the
+channel builder gui in HOC --- albeit substantially
+similar. The KSChan @asetstructure#KSChan method
+uses a slightly modified vector format so the old
+Java channelbuilder tool will not work without
+updating the Java implementation.
+
+? setstructure
+@hsyn
+kschan.setstructure(vec)
+@hdesc
+@h
+
+? remove_state
+@hsyn
+kschan.remove_state(index)
+kschan.remove_state(ksstate)
+@hdesc
+@h
+? remove_transition
+@hsyn
+kschan.remove_transition(index)
+kschan.remove_transition(kstrans)
+@hdesc
+@h
+
+? ngate
+@hsyn
+n = kschan.ngate()
+@hdesc
+@h
+? nstate
+@hsyn
+n = kschan.nstate()
+@hdesc
+@h
+? ntrans
+@hsyn
+n = kschan.ntrans()
+@hdesc
+@h
+? nligand
+@hsyn
+n = kschan.nligand()
+@hdesc
+@h
+? pr
+@hsyn
+kschan.pr()
+@hdesc
+@h
+
+? iv_type
+@hsyn
+type = kschan.iv_type()
+type = kschan.iv_type(type)
+@hdesc
+@h
+? gmax
+@hsyn
+val = kschan.gmax()
+val = kschan.gmax(val)
+@hdesc
+@h
+? erev
+@hsyn
+val = kschan.erev()
+val = kschan.erev(val)
+@hdesc
+@h
+
+? add_hhstate
+@hsyn
+ksstate = kschan.add_hhstate(name)
+@hdesc
+@h
+? add_ksstate
+@hsyn
+ksstate = kschan.add_ksstate(name)
+@hdesc
+@h
+? add_transition
+@hsyn
+kstrans = kschan.add_transition(src_index, target_index)
+kstrans = kschan.add_transition(src_ksstate, target_ksstate)
+@hdesc
+@h
+? trans
+@hsyn
+kstrans = kschan.trans(index)
+kstrans = kschan.trans(src_ksstate, target_ksstate)
+@hdesc
+@h
+? state
+@hsyn
+ksstate = kschan.state(index)
+@hdesc
+@h
+? gate
+@hsyn
+ksgate = kschan.gate(index)
+@hdesc
+@h
+
+? name
+@hsyn
+string = kschan.name()
+string = kschan.name(string)
+@hdesc
+@h
+? ion
+@hsyn
+string = kschan.ion()
+string = kschan.ion(string)
+@hdesc
+@h
+? ligand
+@hsyn
+string = kschan.ligand(index)
+@hdesc
+@h
+
+?1 KSState
+@hsyn
+cannot be created directly
+@hdesc
+A helper class for @aKSChan . KSChan creates and destroys
+these objects internally. It cannot be created directly
+with the "new" keyword. An error message will be printed
+if a hoc reference is used after KSChan has destroyed
+the referenced KSState.
+@hsee
+add_hhstate#KSChan add_ksstate#KSChan
+@h
+
+? frac
+@hsyn
+val = ksstate.frac()
+val = ksstate.frac(val)
+@hdesc
+@h
+? index
+@hsyn
+index = ksstate.index()
+@hdesc
+@h
+
+? gate
+@hsyn
+ksgate = ksstate.gate()
+@hdesc
+@h
+
+? name
+@hsyn
+string = ksstate.name()
+string = ksstate.name(string)
+@hdesc
+@h
+
+?1 KSGate
+@hsyn
+cannot be created directly
+@hdesc
+A helper class for @aKSChan . KSChan creates and destroys
+these objects internally. It cannot be created directly
+with the "new" keyword. An error message will be printed
+if a hoc reference is used after KSChan has destroyed
+the referenced KSGate.
+@hsee
+gate#KSChan
+@h
+
+? nstate
+@hsyn
+n = ksgate.nstate()
+@hdesc
+@h
+? power
+@hsyn
+i = ksgate.power()
+i = ksgate.power(i)
+@hdesc
+@h
+? sindex
+@hsyn
+i = ksgate.sindex()
+@hdesc
+@h
+? index
+@hsyn
+i = ksgate.index()
+@hdesc
+@h
+
+?1 KSTrans
+@hsyn
+cannot be created directly
+@hdesc
+A helper class for @aKSChan . KSChan creates and destroys
+these objects internally. It cannot be created directly
+with the "new" keyword. An error message will be printed
+if a hoc reference is used after KSChan has destroyed
+the referenced KSTrans.
+@hsee
+add_transition#KSChan trans#KSChan
+@h
+
+? set_f
+@hsyn
+kstrans.set_f(direction, ftype, parmvec)
+@hdesc
+@h
+? index
+@hsyn
+i = kstrans.index()
+@hdesc
+@h
+? type
+@hsyn
+i = kstrans.type()
+i = kstrans.type(i)
+@hdesc
+@h
+? ftype
+@hsyn
+i = kstrans.ftype(direction)
+@hdesc
+@h
+? ab
+@hsyn
+kstrans.ab(vvec, avec, bvec)
+@hdesc
+@h
+? inftau
+@hsyn
+kstrans.inftau(vvec, infvec, tauvec)
+@hdesc
+@h
+? f
+@hsyn
+val = kstrans.f(direction, v)
+@hdesc
+@h
+
+? src
+@hsyn
+ksstate = kstrans.src()
+@hdesc
+@h
+? target
+@hsyn
+ksstate = kstrans.target()
+@hdesc
+@h
+? parm
+@hsyn
+parmvec = kstrans.parm(direction)
+@hdesc
+@h
+
+? ligand
+@hsyn
+string = kstrans.ligand()
+string = kstrans.ligand(string)
+@hdesc
+@h
+

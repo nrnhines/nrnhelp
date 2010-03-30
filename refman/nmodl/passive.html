@@ -1,0 +1,30 @@
+<pre>
+: passive channel			:<a href="#p1>??</a>
+NEURON {				:<a href="#p2>??</a>
+        SUFFIX Passive
+        NONSPECIFIC_CURRENT i
+        RANGE g, e
+}
+
+UNITS {					:<a href="#p3>??</a>
+        (mV) = (millivolt)
+        (mA) = (milliamp)
+}
+
+INDEPENDENT {t FROM 0 TO 1 WITH 1 (ms)} :<a href="#p4>??</a>
+
+PARAMETER {				:<a href="#p7>??</a>
+        g = .001     (mho/cm2)
+        e = -70      (mV)
+}
+
+ASSIGNED {				:<a href="#p8>??</a>
+	i    (mA/cm2)
+	v    (mV)
+}
+
+BREAKPOINT {				:<a href="#p9>??</a>
+        i = g*(v - erev)
+	: printf("Passive t=%g v=%g i=%g\n", t, v, i)
+}
+</pre>

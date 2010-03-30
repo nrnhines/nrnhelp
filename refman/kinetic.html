@@ -1,0 +1,299 @@
+<h1>KINETIC Block</h1>
+<pre>
+  > Where can I find documentation for kinetic blocks, explaining where
+  > f_flux and b_flux are defined, for example, and how << and <->
+  > and ~ and (c1,c2) work. I think I understand most  of it, but especially
+  > the part about b_flux and f_flux I'd like to see spelled out somewhere.
+  > The implementation of a kinetic scheme for the sodium potassium pump
+  > is not so straightforward as the calcium pump, as some of the rate
+  > constants are voltage dependent, and the Hill coeficient of the dependence
+  > of the pump current on Nai is 1.4, though three Na ions are involved in the
+  > reaction, of course. Anyway , thanks for any information on documentation
+  > that you can give me- can the model accomodate rate constants that are a
+  > function of voltage and reactions where there is cooperativity between the
+  > binding sites?
+</pre>
+The only explicit documentation about KINETIC blocks is in
+nrn/doc/man/nmodl/scopman.tex but that answers your question about
+f_flux and b_flux. I am enclosing the relevant fragment
+at the end. It is perfectly ok to have voltage dependent rates. My guess is that
+the Hill coefficient will be a phenomenological result of a nonlinear kinetic
+model and you will have to set rates and perhaps adjust the scheme to
+get the right coefficient. Eg. do you know if the Hill coefficient of the
+dependence of pump current on Nai is also dependent on Ko?
+Cooperativity between binding sites are nicely handled by kinetic schemes.
+If you send me an verbal description of the reactions you think are essential
+as well as a KINETIC block you believe embodies them, I'll check your syntax.
+For example, if you imagine an exchange of 3 Na and 4 K then the simplest
+scheme is (in analogy to the capump)
+<pre>
+	KINETIC nakpump {
+		COMPARTMENT area { pump nkpump}
+		COMPARTMENT voli { nai ki }
+		COMPARTMENT volo { nao ko }
+		~ nai << (-(ina - last_ina_pmp)*vol2surfaceratio/FARADAY
+		~ 3 nai + 4 ko + pump <-> nkpump	(f1rate(v), b1rate(v))
+		~ nkpump <-> 3 nao + 4 ki		(f2rate(v), b2rate(v))
+		nai_pmp = unitfactor*FARADAY*(f_flux - b_flux)/area
+	}
+</pre>
+where the states are pump, nkpump, nai. ko, ki, nao should be CONSTANTs.
+It should be noted, though, that dimensional considerations make this
+very confusing since pump and nkpump are in terms of area
+and concentrations are in terms of mM
+ and if it doesn't pass through modlunit without error
+then it is certainly wrong. Here I can help or you can do this
+in analogy to capump.mod using the COMPARTMENT statement.
+I am enclosing several old email messages that explain some of this.
+<pre>
+----------
+Subject: Re:  COMPARTMENT statement in SCoP
+
+COMPARTMENT statement syntax is:
+
+        COMPARTMENT size {scalar state list}   or
+        COMPARTMENT index, size(index) {vector state list}
+This allows the user to select compartment sizes for states such that
+quantity of matter is conserved but state units are still convenient.
+The invariant that is important is
+        stateunits * sizeunits / time (or indepunits)
+==      fluxunits
+==      rateunits * (product of stateunits^stoichiometry)
+        
+It is important that all reactions have the same units or that you
+know exactly what you are doing.
+
+Some examples of the use of COMPARTMENT are when:
+        diffusion in cylinder with variable diameter or dx
+        transfer of matter between compartments of differetnt size
+        reaction between substance on a surface and substance in solution
+ 
+        It is convenient that states have different units.
+
+There is one caveat involving the relationship beteen COMPARTMENT and CONSERVE
+Compartment sizes are taken into account on the state side of the CONSERVE
+statement, but the user must explicitly specify the ammount conserved.
+For example, if state A is in compartment of size a, and B is relative to
+compartment of size b, and the total substance of A and B is conserved
+with total = a*A + b*B then
+        CONSERVE A + B = a*A0 + b*B0
+is the proper statement
+
+It is very important that you check the units with modlunit to make sure
+that the programs idea of what you are doing is consistent with yours.
+
+-----------------
+Subject: Re:  COMPARTMENT directive
+        
+The COMPARTMENT directive <should> help. It is just that the compartment
+units are dimensionless.  The definition of a kinetic equation is that
+A_comp1 * k1 is the flux leaving A_comp1 and entering A_comp2 due to this
+equation.  The change in A_comp2 per unit time is
+compartment_A_comp2 * A_comp2' = sum of all fluxes entering - sum of
+all fluxes leaving.
+
+This can make the units of the k's fairly cumbersome since they depend on
+the units of the compartment size and the units of the states.
+i.e. all fluxes are material (extensive) quantities.
+The alternative was to keep the k's in intensive units and
+scale the fluxes by the appropriate compartment sizes but that was
+deemed less efficient.
+
+--------------
+
+The COMPARTMENT syntax has two cases. One for scalar states and one for
+vector states.
+COMPARTMENT index, volume(index) { list of vector states without
+brackets }
+COMPARTMENT volume { list of scalar states }
+
+If you understand bnf syntax you can look in nrn/nmodl/SRC/parse1.y
+to see how it is parsed. In fact that file is the definitive place for
+all nmodl syntax. Look at the lines around
+        compart:
+
+What it means is that states are located in different size compartments and
+the that has to be taken into account when calculating the change in a state
+per unit time.
+Thus
+
+COMPARTMENT v1 {a}
+COMPARTMENT v2 {b}
+~ a<->b (k1,k2)
+
+solves the equations
+v1*a' = -k1*a + k2*b
+v2*b' = +k1*a + k2*b
+
+Without the COMPARTMENT statements the equations are
+a' = -k1*a + k2*b
+so compartments affect the rate units since with compartments the  
+fluxes are in extensive units (eg, moles/sec)
+
+
+
+-----------
+</pre>
+<pre>
+KINETIC <block_name>
+{
+  [<statement list>]
+  ~ <stoic> <var> [ + ...] <-> ... (kf, kr)
+  [<statement list>]
+}
+</pre>
+ 
+A KINETIC block contains a set of equations describing reactions
+of the chemical reaction type.
+On each side of the double arrow \verb+<->+ in a reaction
+is a sum of terms consisting of
+an optional stoichiometric number (small integer) multiplying any type
+of SCoP variable (CONSTANT, ASSIGNED, STATE, INDEPENDENT, STEPPED, or
+SWEEP).
+The space between the number and the variable is optional.
+f_flux and b_flux
+following each reaction are forward and reverse rate coefficients for
+the reaction and can be arbitrary expressions.
+The effect of any type of variable other than a state variable is to
+multiply one of the rate coefficients by the variable raised to the
+power of its stoichiometric number. 
+If the variable appears on the left-hand side of the reaction, it
+multiplies the forward rate coefficient and if it is on the right-hand
+side it multiplies the reverse rate coefficient.
+
+Three additional types of equations are also possible in KINETIC blocks. \\
+\verb+~ <var> -> (<rate expression>)+ \\
+represents a flux out of a state with the specified rate coefficient. \\
+\verb+~ <var> << (<flux expression>)+ \\   
+represents a flux into a state. \\
+\verb9CONSERVE <state expression> = <constant expression>9 \\
+represents a form of algebraic equation (such as a conservation law) that
+is solved with the equations from the specified reactions.  Each
+CONSERVE equation added to a KINETIC block results in the deletion of
+an appropriate equation from the reaction set (to keep the total number of
+equations constant for the numerical solvers).
+\verb+<state expression>+ must be a linear equation in the KINETIC state
+variables.
+Reactions in a KINETIC block are transformed into ordinary differential
+equations for the state variables
+that can be integrated via a SOLVE directive in the EQUATION
+block.
+Solvers require that the number of state equations in a KINETIC block be
+equal to the number of state variables in the block.
+
+Immediately following each reaction equation, the variables \verb+f_flux+
+and \verb+b_flux+ contain the unidirectional fluxes of the reaction from
+left to right (``forward'') and right to left (``backward''), respectively.
+If these flux values are
+needed, they must be stored by the user before the next reaction equation
+since the same variables are used for all reaction equations.
+
+
+  > conformation. The internal and external concentrations of the ions were
+  > fixed except for nai.
+  > 
+  > 
+  > ~ pump1 <-> pump2  (a(V),b(V))
+  > ~ pump2 -> pump1  (c(Na_i))
+  > ~nai << unitfactor f_flux
+  > ina_pump = (1e-4)3 FARADAY f_flux/area
+f_flux is not a valid quantity within a reaction.
+save it in a variable and use the variable as in:
+ ~ pump2 -> pump1  (c(Na_i))
+   naflux = f_flux
+ ~nai << unitfactor naflux
+ ina_pump = (1e-4)3 FARADAY naflux/area
+
+There is another problem, though, in that the solver is going to think
+the reactions are linear and not bother to do a newton's method iteration.
+I suggest factoring out an Na_i from c(Na_i) so that the nonlinearity of
+the kinetics is obvious. ie
+	~pump2 + nai -> pump1 (c(Na_i)/nai)
+although I'd change c() instead of doing the division here.
+
+Another issue to think about is: what is happening to nai during a time
+step? The purpose of using a kinetic scheme in this context is for
+numerical stability. Is there a chance that nai can go negative or
+change drastically in a single time step? A lot of times, pumps are set up
+so that in a time step they start out with a large current which is then
+held constant over the entire timestep which changes the nai too much.
+This is the beauty of the implicit methods. The value of nai that is used
+is the value at the END of the time step.
+<h2><a name="COMPARTMENT">COMPARTMENT</a></h2>
+<h2><a name="CONSERVE">CONSERVE<a></h2>
+<h2><a name="LONGDIFUS">LONGITUDINAL_DIFFUSION<a></h2>
+
+Causes the longitudinal diffusion equation to be applied to the specified
+states. The syntax is the same as the COMPARTMENT statement except that
+instead of volume, one specifies the flux area between adjacent compartments.
+This flux area is normally (but not always since the exact form is determined
+by the coordinate system of the model) an explicit function of "diam".
+If that is the case, then the average diameter between this segment and
+each adjacent segment is used to calculate the area through which the
+longitudinal fluxes flow. Furthermore, the real volume of the compartment
+is assumed to be proportional to the length of the segment.
+
+For example, longitudinal diffusion of sodium ions under the assumption
+that concentration does not vary radially would look like:
+KINETIC {
+	COMPARTMENT PI*(diam/2)^2 {nai}
+	LONGITUDINAL_DIFFUSION Dna*PI*(diam/2)^2 {nai}
+	~ nai << (-ina/FARADAY*PI*diam*(1e4))
+}
+Notice that the compartment volume is really volume per length and
+the memebrane ina current flows in through an area measured in
+area/length. Here, diam, is the diameter of the center of the segment.
+On the other hand, in calculating the longitudinal flux area, the diameter
+used is appropriate for each edge area of the segment that has an adjacent
+connecting segment.
+
+Longitudinal diffusion in combination with radial diffusion.
+The original radial diffusion model was written as:
+KINETIC state {
+        COMPARTMENT i, diam*diam*vol[i] {ca CaBuffer Buffer}
+        ~ ca[0] << (-ica*PI*diam*frat[0]/(2*FARADAY))
+        FROM i=0 TO NANN-2 {
+                ~ ca[i] <-> ca[i+1] (DFree*frat[i+1], DFree*frat[i+1])
+        }
+        dsq = diam*diam
+        FROM i=0 TO NANN-1 {
+                dsqvol = dsq*vol[i]
+                ~ ca[i] + Buffer[i] <-> CaBuffer[i] (k1buf*dsqvol,k2buf*dsqvol)
+        }
+        cai = ca[0]
+}
+to incorporate longitudinal diffusion requires the additional statement
+(after the COMPARTMENT statement)
+	LONGITUDINAL_DIFFUSION i, diam*diam*vol[i] {ca}
+The vol[i] factor here works since it is equivalent to the annulus area.
+Some caution is recommended with respect to 2-d diffusion.
+Since longitudinally adjacent annuli are hooked together to allow
+longitudinal diffusion, the case of changing diameter must be considered
+carefully to make sure this model makes sense, ie the segments are short
+enough.
+
+Our final example is taken from cabpump.mod:
+KINETIC state {
+        COMPARTMENT i, (1+beta)*diam*diam*vol[i]*1(um) {ca}
+        COMPARTMENT (1e10)*area1 {pump pumpca}
+        COMPARTMENT volo*(1e15) {cao}
+                
+        : all currents except pump
+        ~ ca[0] << (-(ica-last_ica_pmp)*PI*diam*1(um)*(1e4)*frat[0]/(2*FARADAY)
+        :diffusion
+        FROM i=0 TO NANN-2 {
+                ~ ca[i] <-> ca[i+1] (DFree*frat[i+1]*1(um), DFree*frat[i+1}*(1um)
+        }
+        :pump
+        ~ ca[0] + pump <-> pumpca       (c1, c2)
+        ~ pumpca <-> pump + cao         (c3, c4)
+        ica_pmp = (1e-4)*2*FARADAY*(f_flux - b_flux)/area1 
+        
+        cai = ca[0]
+}
+Here, the beta factor in the compartment size results in
+free internal calcium being in fast equilibrium with a non-saturable
+buffer in which the ratio of bound to free calcium is beta.
+The required statement is:
+        LONGITUDINAL_DIFFUSION i, diam*diam*vol[i] {ca}
+

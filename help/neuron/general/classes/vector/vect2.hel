@@ -1,0 +1,828 @@
+?p neuron.exe general classes Vector
+
+
+?2 interpolate
+@hsyn
+obj = ysrcdest.interpolate(xdest, xsrc)
+obj = ydest.interpolate(xdest, xsrc, ysrc)
+@hdesc
+Linearly interpolate points from (xsrc,ysrc) to (xdest,ydest)
+In the second form, xsrc and ysrc remain unchanged.
+Destination points outside the domain of xsrc are set to
+ysrc[0] or ysrc[ysrc.size-1]
+@hex
+@execcode interp
+objref g
+g = new Graph()
+g.size(0,10,0,100)
+
+@code
+//...
+objref xs, ys, xd, yd
+xs = new Vector(10)
+xs.indgen()
+ys = xs.c.mul(xs)
+ys.line(g, xs, 1, 0) // black reference line
+
+xd = new Vector()
+
+xd.indgen(-.5, 10.5, .1)
+yd = ys.c.interpolate(xd, xs)
+yd.line(g, xd, 3, 0) // blue more points than reference
+
+xd.indgen(-.5, 13, 3)
+yd = ys.c.interpolate(xd, xs)
+yd.line(g, xd, 2, 0) // red fewer points than reference
+@endcode
+@h
+
+? deriv
+@hsyn
+obj = vdest.deriv(vsrc)
+obj = vdest.deriv(vsrc, @vardx)
+obj = vdest.deriv(vsrc, @vardx, @varmethod)
+obj = vsrcdest.deriv()
+obj = vsrcdest.deriv(@vardx)
+obj = vsrcdest.deriv(@vardx, @varmethod)
+@hdesc
+The numerical Euler derivative or the central difference derivative of @{vec@} 
+is placed in @{vdest@}.  
+The variable @{@vardx@} gives the increment of the independent variable
+between successive elements of @{vec@}.  
+@dl
+@dt @{@varmethod@} = 1 = Euler derivative:
+@dd @{vec1[@vari] = (vec[@vari+1] - vec[@vari])/@vardx@} <br>
+Each time this method is used, 
+the first element 
+of @{vec@} is lost since @vari cannot equal -1.  Therefore, since the 
+@{integral@} function performs an Euler
+integration, the integral of @{vec1@} will reproduce @{vec@} minus the first 
+element.  
+@dt @{@varmethod@} = 2 = Central difference derivative:
+@dd @{vec1[@vari] = ((vec[@vari+1]-vec[@vari-1])/2)/@vardx@} <br>
+This method produces an Euler derivative for the first and last
+elements of @{vec1@}.  The central difference method maintains the 
+same number of elements in @{vec1@}
+as were in @{vec@} and is a more accurate method than the Euler method. 
+A vector differentiated by this method cannot, however, be integrated 
+to reproduce the original @{vec@}.
+@endl
+ 
+@hex
+@code
+objref vec, vec1
+vec = new Vector()
+vec1 = new Vector()
+vec.indgen(0, 5, 1)
+func sq(){
+	return $1*$1
+}
+vec.apply("sq")
+vec1.deriv(vec, 0.1)
+@endcode
+creates @{vec1@} with elements:
+@table
+10	20	
+40	60	
+80	90
+@endtable
+Since @{@vardx@}=0.1, and there are eleven elements including 0,
+ the entire function exists between the values of 0 and 1, and the derivative
+values are large compared to the function values. With @{@vardx@}=1,the vector
+@{vec1@} would consist of the following elements:
+@table
+1	2	
+4	6	
+8	9
+@endtable
+
+The Euler method vs. the Central difference method:<br>
+Beginning with the vector @{vec@}:
+@table
+0	1	
+4	9	
+16	25
+@endtable
+@{vec1.deriv(vec, 1, 1)@} (Euler) would go about 
+producing @{vec1@} by the following method:
+@table
+1-0   = 1	4-1  = 3		
+9-4   = 5	16-9 = 7	
+25-16 = 9
+@endtable
+whereas @{vec1.deriv(vec, 1, 2)@} (Central difference) would go about 
+producing @{vec1@} as such:
+@table
+1-0      = 1		(4-0)/2  = 2	
+(9-1)/2  = 4		(16-4)/2 = 6	
+(25-9)/2 = 8		25-16    = 9
+@endtable
+@h
+
+? integral
+@hsyn
+obj = vdest.integral(vsrc)
+obj = vdest.integral(vsrc, @vardx)
+obj = vsrcdest.integral()
+obj = vsrcdest.integral(@vardx)
+@hdesc
+Places a numerical Euler integral of the vsrc elements in vdest.
+@{@vardx@} sets the size of the discretization.
+
+@{vdest[i+1] = vdest[i] + vsrc[i+1]@} and the first element of @{vdest@} is always
+equal to the first element of @{vsrc@}.
+@hex
+@code
+objref vec, vec1
+vec = new Vector()
+vec1 = new Vector()
+vec.indgen(0, 5, 1)	//vec will have 6 values from 0 to 5, with increment=1
+vec.apply("sq")		//sq() squares an element 
+			//and is defined in the example for .deriv
+vec1.integral(vec, 1)	//Euler integral of vec elements approximating
+			//an x-squared function, dx = 0.1
+vec1.printf()
+@endcode
+will print the following elements in @{vec1@} to the screen:
+@table
+0	1	5	
+14	30	55
+@endtable
+In order to make the integral values more accurate, it is necessary to increase
+ the size of the vector and to decrease the size of @vardx.
+@code
+objref vec2
+vec2 = new Vector(6)
+vec.indgen(0, 5.1, 0.1)	//vec will have 51 values from 0 to 5, with increment=0.1
+vec.apply("sq")		//sq() squares an element 
+			//and is defined in the example for .deriv
+vec1.integral(vec, 0.1)	//Euler integral of vec elements approximating
+			//an x-squared function, dx = 0.1
+for i=0,5{vec2.x[i] = vec1.x[i*10]}  //put the value of every 10th index in vec2
+vec2.printf()
+@endcode
+will print the following elements in @{vec2@} (which are the elements of
+@{vec1@} corresponding to the integers 0-5) to the screen:
+@table
+0	0.385	2.87
+9.455	22.14	42.925
+@endtable
+The integration naturally becomes more accurate as
+@vardx is reduced and the size of the vector is increased.  If the vector 
+is taken to 501 elements from 0-5 and @vardx is made to equal 0.01, the integrals
+of the integers 0-5 yield the following (compared to their continuous values
+on their right).
+@table
+0.00000 -- 0.00000	0.33835 --  0.33333	2.6867  --  2.6666
+9.04505 -- 9.00000	21.4134 -- 21.3333	41.7917 -- 41.6666
+@endtable	
+@h
+
+? median
+@hsyn
+median = vsrc.median()
+@hdesc
+Find the median value of @{vec@}.
+@h
+
+? medfltr
+@hsyn
+obj = vdest.medfltr(vsrc)
+obj = vdest.medfltr(vsrc, @varpoints)
+obj = vsrcdest.medfltr()
+obj = vsrcdest.medfltr( @varpoints)
+@hdesc
+Apply a median filter to vsrc, producing a smoothed version in vdest.
+Each point is replaced with the median value of the @varpoints on
+either side. 
+This is typically used for eliminating spikes from data.
+@h
+
+? sort
+@hsyn
+obj = vsrcdest.sort()
+@hdesc
+Sort the elements of @{vec1@} in place, putting them in numerical order.
+@h
+
+? sortindex
+@hsyn
+vdest = vsrc.sortindex()
+vdest = vsrc.sortindex(vdest)
+@hdesc
+Return a new vector of indices which sort the vsrc elements in numerical
+order. That is vsrc.index(vsrc.sortindex) is equivalent to vsrc.sort().
+If vdest is present, use that as the destination vector for the indices.
+This, if it is large enough, avoids the destruct/construct of vdest.
+@hex
+@execcode sortindx
+@code
+objref a, r, si
+r = new Random()
+r.uniform(0,100)
+a = new Vector(10)
+a.setrand(r)
+a.printf
+
+si = a.sortindex
+si.printf
+a.index(si).printf
+@endcode
+
+@h
+
+? reverse
+@hsyn
+obj = vsrcdest.reverse()
+@hdesc
+Reverses the elements of @{vec@} in place.
+@h
+
+? rotate
+@hsyn
+obj = vsrcdest.rotate(@varvalue)
+obj = vsrcdest.rotate(@varvalue, 0)
+@hdesc
+A negative @varvalue will move elements to the left.  A positive argument
+will move elements to the right.  In both cases, the elements shifted off one
+end of the vector will reappear at the other end.
+If a 2nd arg is present, 0 values get shifted in and elements shifted off
+one end are lost.
+@hex
+@code
+vec.indgen(1, 10, 1)
+vec.rotate(3)
+@endcode
+orders the elements of @{vec@} as follows:
+@table
+8  9  10  1  2  3  4  5  6  7
+@endtable
+whereas,
+@code
+vec.indgen(1, 10, 1)
+vec.rotate(-3)
+@endcode
+orders the elements of @{vec@} as follows:
+@table
+4  5  6  7  8  9  10  1  2  3
+@endtable
+@execcode rotate
+@code
+objref vec
+vec = new Vector()
+vec.indgen(1,5,1)
+vec.printf
+vec.c.rotate(2).printf
+vec.c.rotate(2, 0).printf
+vec.c.rotate(-2).printf
+vec.c.rotate(-2, 0).printf
+@endcode
+@h
+
+? rebin
+@hsyn
+obj = vdest.rebin(vsrc,@varfactor)
+obj = vsrcdest.rebin(@varfactor)
+@hdesc
+Compresses length of vector @{vsrc@} by an integer @varfactor.  The sum of 
+elements is conserved, unless the @varfactor produces a remainder, 
+in which case the remainder values are truncated from @{vdest@}.
+@hex
+@code
+vec.indgen(1, 10, 1)
+vec1.rebin(vec, 2)
+@endcode
+produces @{vec1@}:
+@table
+3  7  11  15  19
+@endtable
+where each pair of @{vec @} elements is added together into one element.
+
+But,
+@code
+vec.indgen(1, 10, 1)
+vec1.rebin(vec, 3)
+@endcode
+adds trios @{vec@} elements and gets rid of the value 10, producing
+@{vec1@}:
+@table
+6  15  24
+@endtable
+@h
+
+? pow
+@hsyn
+obj = vdest.pow(vsrc, @varpower)
+obj = vsrcdest.pow(@varpower)
+@hdesc
+Raise each element to some power. A power of -1, 0, .5, 1, or 2
+are efficient.
+@h
+
+? sqrt
+@hsyn
+obj = vdest.sqrt(vsrc)
+obj = vsrcdest.sqrt()
+@hdesc
+Take the square root of each element. No domain checking.
+@h
+
+? log
+@hsyn
+obj = vdest.log(vsrc)
+obj = vsrcdest.log()
+@hdesc
+Take the natural log of each element. No domain checking.
+@h
+
+? log10
+@hsyn
+obj = vdest.log10(vsrc)
+obj = vsrcdest.log10()
+@hdesc
+Take the logarithm to the base 10 of each element. No domain checking.
+@h
+
+? tanh
+@hsyn
+obj = vdest.tanh(vsrc)
+obj = vsrcdest.tanh()
+@hdesc
+Take the hyperbolic tangent of each element.
+@h
+
+? abs
+@hsyn
+obj = vdest.abs(vsrc)
+obj = vsrcdest.abs()
+@hdesc
+Take the absolute value of each element.
+@hex
+@code
+objref v1
+v1 = new Vector()
+v1.indgen(-.5, .5, .1)
+v1.printf()
+v1.abs.printf()
+@endcode
+@hsee
+math
+@h
+
+? index
+@hsyn
+obj = vdest.index(vsrc,  @varindices)
+@hdesc
+The values of the vector @{vsrc@} indexed by the vector @varindices are collected
+into @{vdest@}.
+
+@hex
+@code
+objref vec, vec1, vec2, vec3
+vec = new Vector()
+vec1 = new Vector()
+vec2 = new Vector()
+vec3 = new Vector(6)
+vec.indgen(0, 5.1, 0.1)	//vec will have 51 values from 0 to 5, with increment=0.1
+vec1.integral(vec, 0.1)	//Euler integral of vec elements approximating
+			//an x-squared function, dx = 0.1
+vec2.indgen(0, 50,10)
+vec3.index(vec1, vec2)  //put the value of every 10th index in vec2
+@endcode
+makes @{vec3@} with six elements corresponding to the integrated integers from 
+@{vec@}.
+@h 
+
+? min
+@hsyn
+x = vec.min()
+x = vec.min(@varstart, @varend)
+@hdesc
+Return the minimum value.
+@h
+
+? min_ind
+@hsyn
+i = vec.min_ind()
+i = vec.min_ind(@varstart, @varend)
+@hdesc
+Return the index of the minimum value.
+@h
+
+? max
+@hsyn
+x = vec.max()
+x = vec.max(@varstart, @varend)
+@hdesc
+Return the maximum value.
+@h
+
+? max_ind
+@hsyn
+i = vec.max_ind()
+i = vec.max_ind(@varstart, @varend)
+@hdesc
+Return the index of the maximum value.
+@h
+
+? sum
+@hsyn
+x = vec.sum()
+x = vec.sum(@varstart, @varend)
+@hdesc
+Return the sum of element values.
+@h
+
+? sumsq
+@hsyn
+x = vec.sumsq()
+x = vec.sumsq(@varstart, @varend)
+@hdesc
+Return the sum of squared element values.
+@h
+
+? mean
+@hsyn
+x =  vec.mean()
+x =  vec.mean(@varstart, @varend)
+@hdesc
+Return the mean of element values.
+@h
+
+? var
+@hsyn
+x = vec.var()
+x = vec.var(@varstart, @varend)
+@hdesc
+Return the variance of element values.
+@h
+
+? stdev
+@hsyn
+vec.stdev()
+vec.stdev(@varstart,@varend)
+@hdesc
+Return the standard deviation of the element values.
+@h
+
+? stderr
+@hsyn
+x = vec.stderr()
+x = vec.stderr(@varstart, @varend)
+@hdesc
+Return the standard error of the mean (SEM) of the element values.
+@h
+
+? dot
+@hsyn
+x = vec.dot(@varvec1)
+@hdesc
+Return the dot (inner) product of @{vec@} and @varvec1.
+@h
+
+? mag
+@hsyn
+x = vec.mag()
+@hdesc
+Return the vector length or magnitude.
+@h
+
+? add
+@hsyn
+obj = vsrcdest.add(@varscalar)
+obj = vsrcdest.add(@varvec1)
+@hdesc
+Add either a scalar to each element of the vector or add the corresponding
+elements of @varvec1 to the elements of @{vsrcdest@}.
+@{vsrcdest@} and @varvec1 must have the same size.
+@h
+
+? sub
+@hsyn
+obj = vsrcdest.sub(@varscalar)
+obj = vsrcdest.sub(@varvec1)
+@hdesc
+Subtract either a scalar from each element of the vector or subtract the
+corresponding elements of @varvec1 from the elements of @{vsrcdest@}.
+@{vsrcdest@} and @varvec1 must have the same size.
+@h
+
+? mul
+@hsyn
+obj = vsrcdest.mul(@varscalar)
+obj = vsrcdest.mul(@varvec1)
+@hdesc
+Multiply each element of @{vsrcdest@} either by either a scalar or the
+corresponding elements of @varvec1.  @{vsrcdest@} 
+and @varvec1 must have the same size.
+@h
+
+? div
+@hsyn
+obj = vsrcdest.div(@varscalar)
+obj = vsrcdest.div(@varvec1)
+@hdesc
+Divide each element of @{vsrcdest@} either by a scalar or by the
+corresponding elements of @varvec1.  @{vsrcdest@} 
+and @varvec1 must have the same size.
+@h
+
+? scale
+@hsyn
+scale = vsrcdest.scale(@varlow, @varhigh)
+@hdesc
+Scale values of the elements of a vector to lie within the given range.
+Return the scale factor used.
+@h 
+
+? eq
+@hsyn
+boolean = vec.eq(@varvec1)
+@hdesc
+Test equality of vectors.  Returns 1 if all elements of vec ==
+corresponding elements of @varvec1 (to within @afloat_epsilon ).
+Otherwise it returns 0.
+@h
+
+? meansqerr
+@hsyn
+x = vec.meansqerr(@varvec1)
+x = vec.meansqerr(@varvec1, @varweight_vec)
+@hdesc
+Return the mean squared error between values of the elements of @{vec@} and
+the corresponding elements of @varvec1.  @{vec@} and @varvec1 must have the
+same size.
+
+If the second vector arg is present, it also must have the same size and the
+return value is sum of w[i]*(v1[i] - v2[i])^2 / size
+@h
+
+?1 Fourier
+The following routines are based on the fast fourier transform (FFT)
+and are implemented using code from Numerical Recipes in C (2nd ed.)
+Refer to this source for further information.
+
+? correl
+@hsyn
+obj = vdest.correl(@varsrc)
+obj = vdest.correl(@varsrc, @varvec2)
+@hdesc
+Compute the cross-correlation function of @varsrc and @varvec2 (or the
+autocorrelation of @varsrc if @varvec2 is not present).
+@h
+
+? convlv
+@hsyn
+obj = vdest.convlv(@varsrc,@varfilter)
+obj = vdest.convlv(@varsrc,@varfilter, @varsign)
+@hdesc
+Compute the convolution of @varsrc with @varfilter.  If <sign>=-1 then
+compute the deconvolution.
+Assumes filter is given in "wrap-around" order, with countup
+@{t=0..t=n/2@} followed by countdown @{t=n..t=n/2@}.  The size of @varfilter
+should be an odd <= the size of @varv1>.
+@hex
+@execcode convlv
+@code
+objref v1, v2, v3
+v1 = new Vector(16)
+v2 = new Vector(16)
+v3 = new Vector()
+v1.x[5] = v1.x[6] = 1
+v2.x[3] = v2.x[4] = 3
+v3.convlv(v1, v2)
+v1.printf()
+v2.printf()
+v3.printf()
+@endcode
+@h
+
+? spctrm
+@hsyn
+obj = vdest.spctrm(vsrc)
+@hdesc
+Return the power spectral density function of vsrc.
+@h 
+
+? filter
+@hsyn
+obj = vdest.filter(src,@varfilter)
+obj = vsrcdest.filter(@varfilter)
+@hdesc
+Digital filter implemented by taking the inverse fft of 
+@varfilter and convolving it with @varvec1.  @varvec and @varvec1 
+are in the time
+domain and @varfilter is in the frequency domain.
+@h
+
+? fft
+@hsyn
+obj = vdest.fft(vsrc, @varsign)
+obj = vsrcdest.fft(@varsign)
+@hdesc
+Compute the fast fourier transform of the source data vector.  If
+@varsign=-1 then compute the inverse fft.
+
+If vsrc.size() is not an integral power of 2, it is padded with 0's to
+the next power of 2 size.
+
+The complex frequency domain is represented in the vector as pairs of
+numbers --- except for the first two numbers.
+vec.x[0] is the amplitude of the 0 frequency cosine (constant)
+and vec.x[1] is the amplitude of the highest (N/2) frequency cosine
+(ie. alternating 1,-1's in the time domain)
+vec.x[2, 3] is the amplitude of the cos(2*PI*i/n), sin(2*PI*i/n) components
+(ie. one whole wave in the time domain)
+vec.x[n-2, n-1] is the amplitude of the cos(PI*(n-1)*i/n), sin(PI*(n-1)*i/n)
+components. The following example of a pure time domain sine wave
+sampled at 16 points should be played with to see where
+the specified frequency appears in the frequency domain vector (note that if the
+frequency is greater than 8, aliasing will occur, ie sampling makes it appear
+as a lower frequency)
+Also note that the forward transform does not produce the amplitudes of
+the frequency components that goes up to make the time domain function but
+instead each element is the integral of the product of the time domain
+function and a specific pure frequency. Thus the 0 and highest frequency
+cosine are N times the amplitudes and all others are N/2 times the amplitudes.
+
+@execcode fft1
+objref box, g1, g2, g3
+objref v1, v2, v3
+
+proc setup_gui() {
+        box = new VBox()
+        box.intercept(1)
+        xpanel("", 1)
+                xradiobutton("sin   ", "c=0  p()")
+                xradiobutton("cos   ", "c=1  p()")
+                xvalue("freq (waves/domain)", "f", 1, "p()")
+        xpanel()
+        g1 = new Graph()
+        g2 = new Graph()
+	g3 = new Graph()
+        box.intercept(0)
+        box.map()
+        g1.size(0,N, -1, 1)
+        g2.size(0,N, -N, N)
+        g3.size(0,N, -N, N)
+}
+@code...	//define a gui for this example
+
+N=16	// should be power of 2
+c=1	// 0 -> sin   1 -> cos
+f=1	// waves per domain, max is N/2
+setup_gui() // construct the gui for this example
+
+proc p() {
+        v1 = new Vector(N)
+        v1.sin(f, c*PI/2, 1000/N)
+        v1.plot(g1)
+                
+        v2 = new Vector()
+        v2.fft(v1, 1)		// forward
+        v2.plot(g2)
+        
+	v3 = new Vector()
+	v3.fft(v2, -1)		// inverse
+	v3.plot(g3)		// amplitude N/2 times the original 
+}
+        
+p()
+@endcode
+
+The inverse fft is mathematically almost identical
+to the forward transform but often
+has a different operational interpretation. In this
+case the result is a time domain function which is merely the sum
+of all the pure sinusoids weighted by the (complex) frequency function
+(although, remember, points 0 and 1 in the frequency domain are special,
+being the constant and the highest alternating cosine, respectively).
+The example below shows the index of a particular frequency and phase
+as well as the time domain pattern. Note that index 1 is for the higest
+frequency cosine instead of the 0 frequency sin.
+
+Because the frequency domain representation is something only a programmer
+could love, and because one might wish to plot the real and imaginary
+frequency spectra, one might wish to encapsulate the fft in a function
+which uses a more convenient representation.
+
+Below is an alternative FFT function where the frequency
+values are spectrum amplitudes (no need to divide anything by N)
+and the real and complex frequency components are
+stored in separate vectors (of length N/2 + 1).
+
+Consider the functions
+@hsyn
+FFT(1, vt_src, vfr_dest, vfi_dest)
+FFT(-1, vt_dest, vfr_src, vfi_src)
+@hdesc
+
+The forward transform (first arg = 1) requires
+a time domain source vector with a length of N = 2^n where n is some positive
+integer. The resultant real (cosine amplitudes) and imaginary (sine amplitudes)
+frequency components are stored in the N/2 + 1
+locations of the vfr_dest and vfi_dest vectors respectively (Note:
+vfi_dest.x[0] and vfi_dest.x[N/2] are always set to 0. The index i in the
+frequency domain is the number of full pure sinusoid waves in the time domain.
+ie. if the time domain has length T then the frequency of the i'th component
+is i/T.
+
+The inverse transform (first arg = -1) requires two freqency domain
+source vectors for the cosine and sine amplitudes. The size of these
+vectors must be N/2+1 where N is a power of 2. The resultant time domain
+vector will have a size of N.
+
+If the source vectors are not a power of 2, then the vectors are padded
+with 0's til vtsrc is 2^n or vfr_src is 2^n + 1. The destination vectors
+are resized if necessary.
+
+This function has the property that the sequence
+@code
+FFT(1, vt, vfr, vfi)
+FFT(-1, vt, vfr, vfi)
+@endcode
+leaves vt unchanged. Reversal of the order would leave vfr and vfi unchanged.
+
+The implementation is:<br>
+@execcode fft3
+@code
+proc FFT() {local n, x
+        if ($1 == 1) { // forward
+                $o3.fft($o2, 1)
+                n = $o3.size()
+                $o3.div(n/2)
+                $o3.x[0] /= 2	// makes the spectrum appear discontinuous
+                $o3.x[1] /= 2	// but the amplitudes are intuitive
+
+                $o4.copy($o3, 0, 1, -1, 1, 2)   // odd elements
+                $o3.copy($o3, 0, 0, -1, 1, 2)   // even elements
+                $o3.resize(n/2+1)
+                $o4.resize(n/2+1)
+                $o3.x[n/2] = $o4.x[0]           //highest cos started in o3.x[1
+                $o4.x[0] = $o4.x[n/2] = 0       // weights for sin(0*i)and sin(PI*i)
+	}else{ // inverse
+                // shuffle o3 and o4 into o2
+                n = $o3.size()
+                $o2.copy($o3, 0, 0, n-2, 2, 1)
+                $o2.x[1] = $o3.x[n-1]
+                $o2.copy($o4, 3, 1, n-2, 2, 1)
+                $o2.x[0] *= 2
+                $o2.x[1] *= 2 
+                $o2.fft($o2, -1)
+        }
+}
+@endcode
+If you load the previous example so that FFT is defined, the following
+example shows the cosine and sine spectra of a pulse. <br>
+@execcode fft4
+objref v1, v2, v3, v4 
+objref box, g1, g2, g3, g4, b1   
+                
+proc setup_gui() {
+        box = new VBox()
+        box.intercept(1)
+        xpanel("")
+                xvalue("delay (points)", "delay", 1, "p()")
+                xvalue("duration (points)", "duration", 1, "p()")
+        xpanel()
+        g1 = new Graph()
+        b1 = new HBox()
+        b1.intercept(1)
+        g2 = new Graph()
+        g3 = new Graph() 
+        b1.intercept(0)
+        b1.map()
+        g4 = new Graph()
+        box.intercept(0)
+        box.map()
+        g1.size(0,N, -1, 1)  
+        g2.size(0,N/2, -1, 1) 
+        g3.size(0,N/2, -1, 1)   
+        g4.size(0,N, -1, 1)
+} 
+@code...
+N=128
+delay = 0
+duration = N/2
+setup_gui()
+proc p() {
+        v1 = new Vector(N)
+        v1.fill(1, delay, delay+duration-1)
+        v1.plot(g1)
+                
+        v2 = new Vector()
+        v3 = new Vector()
+        FFT(1, v1, v2, v3)
+        v2.plot(g2)
+        v3.plot(g3)
+                
+        v4 = new Vector()
+        FFT(-1, v4, v2, v3)
+        v4.plot(g4)
+}
+p()
+
+@endcode
+@hsee
+fft spctrm
+@h

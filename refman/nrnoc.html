@@ -1,0 +1,430 @@
+<title>NEURON</title>
+\author{Michael Hines}
+<h1>Introduction</h1>
+NEURON is designed around the notion of 
+one-dimensional cable ``sections'' which
+can be connected together to form any kind of branched cable and which
+can be endowed with properties which may vary with position along the
+section.  The design goal is to allow the user to talk about neuron
+properties in terms that are familiar to the neurophysiologist and,
+conversely, to keep entirely separate the numerical issues (e.g. number of
+spatial segments) from the specification of morphology.
+
+A nerve model is described by:
+<dl>
+<dt>Declaring the section names. e.g.<dd>
+<pre>
+create soma, axon, dendrite[3]
+</pre>
+<dt>Connecting the sections together. e.g.<dd>
+<pre>
+soma connect axon(0), 0
+for i=0,2 {
+   soma connect dendrite[i](0), 1
+}
+</pre>
+<dt>Specifying the properties of the sections<dd>
+<pre>
+soma { nseg=1  L=50   diam=50 insert hh gnabar_hh=.5*.120 }
+axon { nseg=20 L=1000 diam=5   insert hh }
+for i=0,2 dendrite[i] {
+   nseg=5  L=200  diam(0:1)=10:3 insert pas e_pas=-65 g_pas=.001
+}
+</pre>
+</dl>
+After a nerve model is fully described, it can be simulated by
+initializing its state variables (e.g. voltage) and integrating
+them in time. The user can initialize states explicitly at the
+interpreter level or use a built-in function to perform a standard form
+of initialization. For example, the built-in
+function, <tt>finitialize(-65)</tt>,
+will initialize time
+to 0, membrane potential to -65 millivolts
+and the m,h,n HH state variables to their
+steady state values at that potential.
+A more general alternative would be to construct an explicit
+initialization procedure. For example, an initialization procedure to do the
+same thing as the built-in procedure is
+<pre>
+proc init() {
+   t = 0
+   forall {	/* iterates over all declared sections */
+      v = -65   rates_hh(-65)
+      if (ismembrane("hh")) { m_hh=minf_hh  h_hh=hinf_hh  n_hh=ninf_hh }
+   }
+}
+</pre>
+A procedure to integrate the variables by the amount of time
+given by its argument might be
+<pre>
+proc integrate() {local tstop
+   tstop = t + $1
+   while (t < tstop) {
+      fadvance()
+   }
+}
+</pre>
+
+<h1>Section properties</h1>
+The greatest problem with our first nerve simulation program, CABLE,
+was that the user was responsible for knowing the correspondence between
+segment number and position on the nerve.  All nerve properties were
+assigned via vector variables in which
+the index of the vector was the segment number.
+Changing the number of segments that describe the
+nerve was an error prone and laborious process.
+
+This problem is overcome by the notion of a named section which can
+be thought of as a one-dimensional cable of length, <tt>L</tt>,
+(in $\mu m$) with a continuous position parameter,
+$0 \leq x \leq 1$, in which $x = 1$ corresponds to absolute position <tt>L</tt>.
+Most properties are functions of the position parameter and are called
+``range variables''. Examples are the diameter in \micron, <tt>diam</tt>, the
+membrane potential in mV, <tt>v</tt>, and, on occasion, the
+maximum HH sodium conductance in \mhocm, <tt>gnabar</tt>. We return to
+a discussion of range variables after discussing how we determine
+which section we are talking about.
+
+<h1>Section Name</h1>
+Of course, since every section has a length called <tt>L</tt> (along with
+other names which can be shared by many sections) it is always necessary to
+specify {\em which} section is being discussed.  There are three methods
+of specifying which section a property refers to (with each being
+compact in some contexts and cumbersome in others). They are given
+below in order of precedence (highest first).
+<dl>
+<dt>Dot notation.<dd>This takes precedence over the other methods and
+is described by the syntax {\em sectionname<tt>.</tt>varname}\ \ . Examples
+are
+<pre>
+dendrite[2].L = dendrite[1].L + dendrite[0].L
+axon.v = soma.v
+print soma.gnabar
+axon.nseg = 2*axon.nseg
+</pre>
+This notation is necessary when one needs to refer to more than
+one section within a single statement.
+<dt> Stack of sections.<dd>  The syntax is
+<pre>
+sectionname stmt}
+</pre>
+and means that the currently selected section during the
+execution of <tt>stmt</tt>
+is <tt>sectionname</tt>. This method was used in the introduction and
+is most useful in programming since the user has explicit control over
+the scope of the section and can set several range variables.
+Notice that after the <tt>stmt</tt> is executed the currently selected
+section reverts
+to the name (if any) it had before <tt>sectionname</tt> was seen. The programmer
+is allowed to
+nest these statements to any level.
+Avoid the error:
+<pre>
+	soma L=10 diam=10
+</pre>
+which sets <tt>soma.L</tt>, then pops the section stack and sets <tt>diam</tt> of
+whatever section is then on the stack.
+<dt> Default section.<dd> The syntax
+<pre>
+access sectionname
+</pre>
+defines a default section name to be the currently selected section when the
+first two methods are not in effect. There is often a conceptually
+privileged section which gets most of the use and it is useful to
+declare that as the default section. e.g.
+<pre>
+access soma
+</pre>
+With this, one can, with a minimum of typing, get values of voltage, etc. at
+the command line level.
+In general, this statement should only be used once to give default access
+to a priviledged section. It's bad programming practice to change the
+default access within anything other than an initialization procedure.
+The ``<tt>sectionname</tt>'' form is almost always the right way to
+use the section stack.
+</dl>
+
+The above paragraph discussed explicit selection of a single section.
+A way of selecting a whole class of sections is through a special
+looping command with the syntax ``<tt> forall stmt</tt>'' which
+executes <tt>stmt</tt> once for each section declared in the <tt>create</tt>
+statement. (The order in which the sections are specified in the
+<tt>forall</tt> statement is unspecified).  Within <tt> stmt</tt> it is
+usually necessary to determine which section is, in fact selected, and
+that is done with the functions:
+<dl>
+
+<dd><tt> sectionname(str)</tt><dt> The argument receives the name of the
+currently selected section. (Note that <tt> str</tt>is a string variable and
+must have been previously declared in a <tt>strdef</tt> statement.
+
+<dd><tt>issection(str)</tt><dt> The function returns the value 1 if the
+currently selected section matches the regular expression defined by
+<tt>str</tt> (which may be a literal string enclosed in pairs of double quotes
+or a string variable that was assigned some specific string) and 0 otherwise.
+The <tt>str</tt> may be a regular expression which can match a subset of
+the section names and uses a syntax similar to the unix ``grep'' filter.
+The rules which differ from grep are
+<dl>
+<dt> <tt><</tt>...<tt>></tt> replaces <tt>[</tt>...<tt>]</tt>
+to avoid conflicts with indexed sections.
+<dt> <tt>{</tt>{\em ibegin}<tt>-</tt>{\em iend}<tt>}</tt> matches any integer between
+ibegin and iend. Thus <tt>"a[{8-15}]"</tt> matches sections <tt>a[8]</tt> through
+<tt>a[15]</tt>. Note that there can be no spaces in the braces.
+<dt> We always begin a match from the beginning of the section name.
+This makes the carat character obsolete. If you don't want to require
+a match from the beginning, use ``<tt>.*</tt>''. (Note that the dot matches
+any character and the asterisk means 0 or more occurrences of the
+previous character).
+<dt> We always close the string with an implicit <tt>$</tt> to requre a match
+at the end of the string.  If you don't require a match at the end, close
+the regular expression with ``<tt>.*</tt>''.
+</dl>
+Examples of the use of regular expressions are:
+<dl>
+<dt>{<tt>issection("soma")</tt>} True only if selected section is <tt>soma</tt>.
+<dt>{<tt>issection("d.*")</tt>} True only if the selected section begins
+with the letter d.
+<dt>{<tt>issection("dendrite[<456>]")</tt>} True only for singly dimensioned
+dendrites with index 4, 5, or 6.
+</dl>
+Generally, one or more ``issection'' functions appear in an ``if'' statement.
+We note in passing that the function {\tt ismembrane("{\em mechanism}")}
+has proven to be extremely useful as a selection property for sections.
+See the section on membrane mechanisms for a fuller description.
+
+For quick selection based on section names the following short forms
+have been added.
+{\tt ifsec "{\em name}"} can be used
+in place of {\tt if (issection("<tt>.*</tt>{\em name}<tt>.*</tt>"))}\\
+{\tt forsec "{\em name}"} can be used in place of {\tt forall ifsec "{\em name}"}\\
+\end{quote}
+
+<dt>Section pointers<dd>
+It is sometimes convenient to make use of the internal section pointers to
+specify sections. e.g. effectively passing a section argument to a function.
+The following functions should be avoided unless absolutely necessary.
+<dl>
+<dt>{\tt this\_section()}<dd> Returns a number that can be used
+as a pointer to the currently accessed section.
+<dt>{\tt push\_section(i)}<dd> Pushes the section with pointer value i onto
+the section stack and makes it the currently accessed section.
+<dt>{\tt pop\_section()}<dd> Pops the section stack. Note that the section
+stack is cleared after every direct command to the interpreter. Therefore
+a sequence of direct commands which manipulate the section stack should
+be enclosed by braces. That is, push\_section cannot be used in place of
+an {\tt access} statement which causes a section to be the default
+section until changed by a subsequent {\tt access} statement.
+</dl>
+</dl>
+
+
+<h1>Range Variables</h1>
+The goal of separating property specification from segment number is
+achieved through the use of ``range variables''. Only two variables
+deal with the section as a whole, <tt>L</tt> which is the length of the
+section, and <tt>nseg</tt> which is the number of segments into which
+the section is divided for numerical purposes. One can change <tt>nseg</tt>
+and not have to change any other property to keep the morphology and
+membrane properties the same. (CAVEAT: a change to nseg discards the
+internal representation of the section and therefore any code which
+specifies the section must be re-executed.  This is not a problem in
+practice since a convenient style is to have nseg set explicitly along
+with other properties as in the example in the Introduction and use the
+editor to change its value.)
+<p>
+A range variable is assigned a value in one of two ways.
+<p>
+The simplest and most
+common is as a constant.  For example, <tt>diam</tt> is the range variable
+name for the diameter of a section. The statement, {\tt axon.diam = 10},
+specifies that the diameter of the axon is uniform over its entire
+length. (An equivalent statement is ``{\tt axon diam=10}'').
+<p>
+On occasion it may be desired to vary the value of a property
+along a length of section and this can be done with the syntax
+\begin{quote}
+{\tt rangevar({\em xmin} : {\em xmax} ) = {\em e1} : {\em e2}}
+\end{quote}
+in which the four italicised symbols are expressions with {\em e1} being
+the value of the property at {\em xmin} and {\em e2} being the value of the
+property at {\em xmax}. Note that there is a constraint,
+$0 \leq xmin \leq xmax \leq 1$, on the value of the position expressions.
+Linear interpolation is used to store the values of the property within
+the segments in the
+position range between {\em xmin} and {\em xmax}. In this manner
+the user can approximate a continuously varying property as a piecewise
+continuous function. (Of course the adequacy of the approximation will
+depend on <tt>nseg</tt>).
+<p>
+The value of a range variable at the center of a segment
+can appear in any expression using the
+syntax, ``{\tt rangevar({\em xval})}'' in which $0 \leq xval \leq 1$. The value
+returned is the value at the center of the segment containing {\em xval}, NOT
+the linear interpolation of the values stored at the centers of
+adjacent segments.
+If the parentheses are omitted, the position defaults to a value of .5.
+<p>
+A special form of the <tt>for</tt> statement is available
+\begin{quote}
+{\tt for ({\em var}) {\em stmt}}
+\end{quote}
+in which, for each value of position that defines the center
+of each segment in the selected section (along with position 0 and 1),
+{\em var} is assigned that value and the {\em stmt} is executed. For
+example to plot the membrane potential as a function of position along the
+axon and dendrite 1 and 2:
+<pre>
+plot(1) axon for (x) plot(x*L, v(x))
+plot(1) dendrite[2] for (x) plot(x*L, v(x))
+</pre>
+
+<h1>Connecting Sections</h1>
+Any branched cable can be constructed by connecting sections using the
+syntax:
+\begin{quote}
+{\tt connect {\em sectionname} (0), {\em xparent}}\ \ , or\\
+{\tt connect {\em sectionname} (1), {\em xparent}}
+\end{quote}
+Here, position 0 or 1 of {\em sectionname} is connected to the currently
+specified section at position {\em xparent} where $0 \leq xparent \leq 1$.
+For example, to connect 20 spines at intervals of 10 microns along
+the distal end of a dendrite
+in which the head of the spine is defined to be position 0 and spines
+are connected at the base, consider
+<pre>
+create dendrite, spine[20]
+access dendrite
+dlen = L = 1000
+for i=0,19 {
+   connect spine[i](1), 1 - i*10/dlen
+}
+</pre>
+The introduction also gives an example of how to connect sections.
+<p>
+Use the {\tt topology()} function to get a simple visualization of
+the way the sections are connected.
+
+<h1>Membrane Mechanisms</h1>
+When a section is created, the only range variable
+properties that are automatically
+generated are
+<p>
+\begin{tabular}{l l}
+<tt>v</tt> & membrane potential in \mv\\
+<tt>diam</tt> & diameter in \micron\\
+<tt>cm</tt> & specific membrane capacitance in \ufcm
+\end{tabular}
+<p>
+Other mechanisms such as channels must be explicitly inserted within a
+section via the ``{\tt insert} {\em mechanism}'' statement.
+Mechanisms that are always available are <tt>hh</tt> and <tt>pas</tt>.
+The range variables which are generated with ``{\tt insert pas}''
+are
+<p>
+\begin{tabular}{l l}
+<tt>g_pas</tt> & specific membrane conductance in \mhocm\\
+<tt>e_pas</tt> & reversal potential in \mv
+\end{tabular}
+<p>
+The range variables which are generated with ``{\tt insert hh}''
+are
+<p>
+\begin{tabular}{l l l}
+<tt>gnabar_hh</tt> &.120 \mhocm & Maximum specific sodium channel conductance\\
+<tt>gkbar_hh</tt> & .036 \mhocm & Maximum potassium channel conductance\\
+<tt>gl_hh</tt> & .0003 \mhocm & Leakage conductance\\
+<tt>ena</tt> & 50 \mv & Sodium reversal potential\\
+<tt>ek</tt> & -77 \mv & Potassium reversal potential\\
+<tt>el_hh</tt> & -54.3 \mv & Leakage reversal potential\\
+<tt>m_hh</tt> && sodium activation state variable\\
+<tt>h_hh</tt> && sodium inactivation state variable\\
+<tt>n_hh</tt> && potassium activation state variable\\
+<tt>ina</tt> & \macm & sodium current\\
+<tt>ik</tt> & \macm & potassium current
+\end{tabular}
+<p>
+Other membrane mechanisms can be made available
+by specifying their current-voltage relations using the model description
+language (see MODL).
+<p>
+If a membrane mechanism, say {\tt X},
+is inserted in a section and if that section
+is the currently specified section, then the function
+<pre>
+ismembrane("X")
+</pre>
+will return the value 1 (0 otherwise).  This is very useful
+in any initialization procedures.
+<p>
+The function, {\tt psection()}, prints all non-default values for
+all range variables that exist in the currently specified section.
+To peruse a list of all values of all sections, try
+<pre>
+forall { psection() xred("",0,0,0)}
+</pre>
+(The xred function will just wait until you type a return key).
+
+<h1>Point processes</h1>
+Not all i-v relations are appropriately expressed in terms of
+per unit area.  Currents due to electrode stimuli of current and voltage
+clamp as well as synaptic currents are more conveniently handled in terms
+of absolute current in \na\ and absolute conductance in \umho.
+
+Point Processes use an object syntax to manage their creation, insertion,
+attributes, and destruction. Three kinds of point processes are always
+available: PulseStim, VClamp, and AlphaSynapse.
+Other user defined point processes can be linked into NEURON using the
+model description language (see NMODL).
+
+Point processes are created by setting an objectvar to a new instance
+of the point process. eg.
+<pre>
+objectvar stim
+soma stim = new PulseStim(.5)	
+</pre>
+which inserts a pulse stimulus in the middle of the soma section.
+When the pulse stimulus is no longer referenced by any object variable
+the point process is removed from the section and destroyed. eg.
+<pre>
+objectvar nil
+stim = nil
+</pre>
+or
+<pre>
+objectvar stim
+</pre>
+would destroy the above pulse stimulus since no other object variable
+is referencing it.
+A point process can be relocated to a new position as in
+<pre>
+	dendrite[2] stim.loc(0)
+</pre>
+without losing the values of its attributes.
+Note that point processes can exist exactly at x=0 and x=1 as well as
+at the center of any segment within a section. When a segment containing
+a point process is destroyed (eg. by re-createing the section or changing
+nseg) the point process still exists but its attributes are lost and it
+must be relocated to a specific location on some section.
+<p>
+Point processes also differ from density mechanisms in that any number of
+the same kind of point process can exist at the same location. Thus
+several PulseStim's can be used to implement a pulse train (although
+it would probably be more convenient to create a PulseTrain using the
+model description language).
+<p>
+The location of a point process can be determined via the <tt>.get_loc</tt> function
+that pushes the section onto the section stack and returns the arc position,
+($0 \leq x \leq 1$). Don't forget to use <tt>pop_section()</tt> to pop the section
+stack after using this object function. Eg:
+<pre>
+strdef sec
+proc print_pp_location() { local x //arg1 must be a point process
+   x = $o1.get_loc()
+   sectionname(sec)
+   printf("%s located at %s(%g)\n", $o1, sec, x)
+   pop_section()
+}
+</pre>
+
+

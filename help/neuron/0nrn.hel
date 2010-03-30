@@ -1,0 +1,12 @@
+?0 Reference
+?A Reference
+?0 neuron.exe
+?1 general
+This subheading deals with those aspects of the hoc interpreter which are
+more general than the neuron specific domain.
+?2 keywords
+?2 functions
+?2 classes
+?0 tools
+This subheading deals with programs other than neuron.exe which help
+manage simulations.

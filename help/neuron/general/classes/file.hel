@@ -1,0 +1,266 @@
+?p neuron.exe general classes
+?1 File
+@hsyn
+fobj = new File()
+fobj = new File("filename")
+@hdesc
+This class allows you to open several files at once, whereas the top level
+functions, @aropen#IO and @awopen#IO ,
+allow you to deal only with one file at a time.  
+
+The functionality of @axopen#IO is not implemented in this class so use
+@code
+	strdef tstr
+	fobj.getname(tstr)
+	xopen(tstr)
+@endcode
+to execute a sequence of interpreter commands in a file.
+
+@hex
+@code
+objref f1, f2, f3	//declare object references
+f1 = new File()		//state that f1, f2, and f3 are pointers to the File class
+f2 = new File()
+f3 = new File()
+f1.ropen("file1")	//open file1 for reading
+f2.wopen("file2")	//open file2 for writing
+f3.aopen("file3")	//open file3 for appending to the end of the file
+@endcode
+opens file1, file2, and file3 for reading, writing, and appending (respectively).
+ 
+@hbug
+The mswindows/dos version must deal with the difference between
+binary and text mode files. The difference is transparent to the
+user except for one limitation. If you mix text and binary data
+and you write text first to the file, then you need to do a
+File.seek(0) to explicitly switch to binary mode just after opening the file
+and prior to the first File.printf. 
+An error message will occur if you
+read/write text to a file in text mode and then try to read/write a binary
+vector.  This issue does not arise with the unix version.
+@hsee
+IO, ropen, xopen, wopen
+@h
+? ropen
+@hsyn
+.ropen()
+.ropen("@varname")
+@hdesc
+ Open the file for reading. If the argument is
+		not present it opens (for reading) the last specified file.
+@h
+
+? wopen
+@hsyn
+.wopen()
+.wopen("@varname")
+@hdesc
+Open the file for writing.  If the argument is
+not present it opens the last specified file.
+@h
+
+? aopen
+@hsyn
+.aopen()
+.aopen("@varname")
+@hdesc
+Open the file for appending to the end of the file. If the argument is
+not present it opens the last specified file.
+@h
+
+? xopen
+@hsyn
+.xopen()
+.xopen("@varname")
+@hdesc
+Open the file and execute it. (not implemented)
+
+Note: if instead of a "@varname", the number 0,1,or 2 is specified then
+		the stdin, stdout, or stderr is opened. (not implemented)
+@h
+
+? close
+@hsyn
+.close()
+@hdesc
+ Flush and close the file. This occurs automatically
+		whenever opening another file or destroying the object.
+@h
+
+? mktemp
+@hsyn
+boolean = f.mktemp()
+@hdesc
+Sets the name to a temporary filename in the /tmp directory (or other
+writable path for mswin and mac). Success returns 1.
+@h
+
+? unlink
+@hsyn
+boolean = f.unlink()
+@hdesc
+Remove the file specified by the current name. A return value of
+1 means the file was removed (or at least it's link count was reduced by
+one and the filename no longer exists).
+@h
+
+? printf
+@hsyn
+.printf("@varformat", @varargs, ...)
+@hdesc
+ As in standard C @{printf@} and the normal
+		hoc @aprintf#IO .
+@h
+
+? scanvar
+@hsyn
+.scanvar()
+@hdesc
+ Reads the next number as in the hoc function @{fscan()@} and
+		returns its value. 
+
+Note: in order that .eof will return
+		true after the last number, the last digit of that number
+		should either be the last character in the file or
+		be followed by a newline which is the last character in the file.
+@h
+
+? scanstr
+@hsyn
+.scanstr(@varstrdef)
+@hdesc
+ Read the next string (delimited by whitespace) into
+		@{strdef@}. Returns the length of a string (if failure then returns
+		-1 and @{strdef@} is unchanged).
+@h
+
+? gets
+@hsyn
+.gets(@varstrdef) 
+@hdesc
+Read up to and including end of line. Returns length of	string.
+If at the end of file, returns -1 and does not change the argument.
+@h
+
+? getname
+@hsyn
+strdef = file.getname()
+strdef = file.getname(@varstrdef)
+@hdesc
+Return the name of the last specified file as a strdef.
+For backward compatibility, if the arg is present also copy it to that.
+@h
+
+? dir
+@hsyn
+strdef = file.dir()
+@hdesc
+Return the pathname of the last directory moved to in the chooser.
+If the @achooser#File has not been created, return the empty string.
+@h
+
+? eof
+@hsyn
+.eof()
+@hdesc
+Return true if at end of ropen'd file.
+@h
+
+? flush
+@hsyn
+.flush()
+@hdesc
+Flush pending output to the file.
+@h
+
+? isopen
+@hsyn
+.isopen()
+@hdesc
+Return true if a file is open.
+@h
+
+? chooser
+@hsyn
+.chooser()
+.chooser("@varw,@varr,@vara,@varx,@vard or nothing")
+.chooser("@varw,@varr,@vara,@varx,@vard or nothing", "@varBanner", "filter", "accept", "cancel", "path")
+
+@hdesc
+		File chooser interface for writing , reading, appending, or
+		just specifying a directory or filename without opening. The banner is
+		optional. The filter, eg. @{"*.dat"@} specifies the files shown
+		in the browser part of the chooser.
+		The "path" arg specifies the file or directory to use when the
+		browser first pops up.
+		The form with args sets the style of the chooser but
+		does not pop it up. With no args, the browser pops up and can
+		be called several times. Each time starting where it left
+		off previously.
+
+		The "d" style is used for selecting a directory (in
+contrast to a file).
+		With the "d" style, three buttons are placed beneath the
+browser area with "Open" centered beneath the "Show", "Cancel" button pair.
+The "Open" button must be pressed for the
+dialog to return the name of the directory. The "Show" button merely
+selects the highlighted browser entry and shows the relevant directory
+contents. A returned directory
+string always has a final "/".
+
+		The "@varx" style is unimplemented. Use
+@code
+		f.chooser("", "Execute a hoc file", "*.hoc", "Execute")
+		if (f.chooser()) {
+			f.getname(@varstr)
+			xopen(@varstr)
+		}
+@endcode
+	The following comes courtesy of Zach Mainen, zach@helmholtz.sdsc.edu.
+@h
+
+? vwrite
+@hsyn
+.vwrite(@var&x)
+.vwrite(@varn, @var&x)
+@hdesc
+		Write binary doubles to a file from an array or variable
+		using @{fwrite()@}. The form with two arguments specifies the
+		number of elements to write and the address from which to
+		begin writing.  With one argument, @varn is assumed to be 1.
+		Must be careful that  @varx[] has at least @varn
+		elements after its passed address.
+@h
+ 
+? vread
+@hsyn
+.vread(@var&x)
+.vread(@varn, @var&x)
+@hdesc
+		Read binary doubles from a file into a pre-existing array
+		or variable using @{fread()@}.
+@hsee
+vwrite
+
+@h
+
+
+? seek
+@hsyn
+.seek()
+.seek(@varoffset)
+.seek(@varoffset,@varorigin)
+@hdesc
+		Set the file position.  Any subsequent file access will access
+		data beginning at the new position.  Without arguments, goes to
+		the beginning of file.  Offset is in characters and is measured
+		from the beginning of the file unless origin is 1 (measures from
+		the current position) or 2 (from the end of the file).  Returns
+		0 if successful, non-zero on error.  Used with .tell(). 
+@h
+
+? tell
+@hsyn
+.tell()
+@hdesc
+Return the current file position or -1 on error.  Used with @{.seek()@}.

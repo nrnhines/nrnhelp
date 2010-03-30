@@ -1,0 +1,80 @@
+?1 SectionList
+@hsyn
+sl = new SectionList()
+@hdesc
+	Class for creating and managing a list of sections
+@hsee
+SectionBrowser, Shape, forsec, list#RangeVarPlot
+@h
+
+? append
+@hsyn
+sl.append()
+@hdesc
+	append the currently accessed section to the list
+@h
+
+? remove
+@hsyn
+n = sl.remove()
+n = sl.remove(sectionlist)
+@hdesc
+remove the currently accessed section from the list
+If the argument is present then all the sections in sectionlist are
+removed from sl.
+Returns the number of sections removed.
+@h
+
+? children
+@hsyn
+sl.children()	
+@hdesc
+Appends the sections connected to the currently accessed section.
+Note that this includes children connected at position 0 of
+parent.
+@h
+
+? subtree
+@hsyn
+sl.subtree()	
+@hdesc
+Appends the subtree of the currently accessed section (including that one).
+@h
+
+? wholetree
+@hsyn
+sl.wholetree()	
+@hdesc
+Appends all sections which have a path to the currently accessed section
+(including the currently accessed section). The section list has the
+important property that the sections are in root to leaf order.
+@h
+
+? allroots
+@hsyn
+sl.allroots()
+@hdesc
+Appends all the root sections. Root sections have no parent section.
+The number of root sections is the number
+of real cells in the simulation.
+@h
+
+? unique
+@hsyn
+n = sl.unique()	
+@hdesc
+Removes all duplicates of sections in the SectionList. I.e. ensures that
+no section appears more than once. Returns the number of sections references
+that were removed.
+@h
+
+? printnames
+@hsyn
+  .printnames()
+@hdesc
+	print the names of the sections in the list.
+
+	The normal usage of a section list involves efficiently iterating
+	over all the sections in the list with
+		forsec sectionlist {statement}
+@h

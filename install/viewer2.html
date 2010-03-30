@@ -1,0 +1,95 @@
+<TITLE>NEURON as a mosaic viewer for complex simulations</TITLE>
+<H1>Running complex NEURON simulations from mosaic</H1>
+<p>
+Research level simulations generally can't be encapsulated in a single hoc
+file. They may require special model descriptions of membrane channels that
+have to be translated into c, compiled, and linked with the standard neuron
+libraries in order to construct a special executable.
+The interpreter code that runs these simulations
+may be packaged in separate .hoc files for setup of neuron geometry,
+specification of membrane properties, and control of the simulation.
+There may be several .session files which place panels of controls and graphs
+on the screen in an arrangement convenient for this simulation. Possibly there
+are data files for fitting the model.
+<p>
+When you download a simulation file with a .nrnzip extension you can
+automatically run it. The .nrnzip file is a compressed archive file containing
+all the files required for the simulation. The name of the downloaded zip
+file is passed to the mos2nrn shell script which is located in
+$NEURONHOME/bin. This script extracts the files of the zip file, creates
+a special version of neuron if required, and runs it.
+
+<p>
+<a href="#warning"> Warning: No security... </a>
+<p>
+To install this feature you need to edit two files in your
+home directory: .mime.types and .mailcap <br>
+
+<p>
+Add the following lines to $HOME/.mime.types <br>
+<pre>
+application/neuron	hoc nrn nrnzip
+</pre>
+
+<p>
+Add the following lines to $HOME/.mailcap <br>
+<pre>
+application/neuron; mos2nrn %s
+</pre>
+
+<p>
+If this feature is installed and your neuron installation is working
+properly then you will be able to see a propagated action potential
+by <a href="hhcable.nrnzip">running
+hhcable.nrnzip</a>. Also, after running that, the hhcable.nrnzip environment
+can be used by subsequent hoc files to run a variation of the larger
+simulation. eg. A <a href="hhcable1.hoc">changeing diameter simulation</a>
+will download hhcable1.hoc and run it in the directory created by the above
+hhcable.nrnzip file.
+
+<p>
+<a href="serve.html">How to serve simulations to others</a>
+
+<p>
+
+<hr>
+<h2><a name="warning"> Warning: No security... </a></h2>
+There is no security with this feature since .hoc files can
+execute arbitrary shell scripts. Also, it is not clear at this time
+what kinds of bad things can happen if inadvertent errors occur.
+If you do not install it you can always
+download the file into some name, examine it, and then execute it explicitly
+with NEURON. To aid in this process, the special.mosaic file does not work
+silently but asks the user at key points whether to continue. At these
+points the user may hit the return key to continue or else type n (return)
+to abort the simulation. These points are: <br>
+
+<ol>
+<li>The script tells the name of the downloaded .nrntar file and the name of
+the directory into which the .nrntar file will be extracted. I don't think
+anything can go wrong here.
+
+<li>The script shows a listing of the names of the files in the .nrntar file.
+None of these should have absolute pathnames. All files should be extracted
+into a temporary directory.
+<p>
+Before answering the next question here is your opportunity to inspect the
+files that have been extracted.
+<p>
+<li>If .mod files are a part of the simulation the script will ask if you wish
+to build the special version of neuron. This step may take some time.
+
+<li>The script asks if you now wish to execute the simulation.
+
+<li>After quitting the simulation, the script asks if you wish to clean up.
+Here, the default is no.
+This involves removing the directory and all subdirectories that have been
+created due to extraction of the tar file and creation of the special
+executable. This is the step I am most worried about since it involves
+a recursive remove command "rm -r -f $simdir". If $simdir is properly
+expanded in the prompt then I guess it is safe.
+<li> Hit return to quit the xterm. The xterm was started with a scrollbar
+so you can see all the script messages before before throwing them away.
+</ol>
+
+

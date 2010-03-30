@@ -1,0 +1,32 @@
+<TITLE>How to serve simulations to others</TITLE>
+<H1>How to serve NEURON simulation files to others</H1>
+<p>
+I assume you already have a working http server.
+<p>
+In the server configuration directory there is a mime.types file.
+It needs the addtional two lines:
+<p>
+<pre>
+application/neuron               hoc nrn nrnzip
+</pre>
+<p>
+
+<h2> Packaging a simulation in a .nrnzip file</h2>
+<p>
+It is merely a zip file with the extension .nrnzip and must
+contain all the .mod, .hoc, and .session files necessary to build and
+run the simulation in a single directory.
+You can assume a complete installation of neuron on
+the client machine including stdrun.hoc in $NEURONHOME/lib/hoc.
+There must be a mosinit.hoc file which will be the argument to nrniv
+(or "special" if there are .mod files).
+
+<p>
+There should be no absolute pathnames in the .nrntar file.
+Every file needed should
+be in the directory (and subdirectories) where the tar file was made.
+In the simplest case it should be sufficient to say:
+<p>
+<pre>
+zip sim.nrnzip *.mod *.hoc *.ses
+</pre>

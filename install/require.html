@@ -1,0 +1,94 @@
+<title> What you need before you install NEURON </title>
+<h1> Requirements for Building NEURON from Sources </h1>
+
+
+<h2>Hardware</h2>
+<h3>Disk space</h3>
+While building you need at least 70MBytes for NEURON and InterViews
+After installation, you can remove the source and
+objects and the remaining libraries and executables
+take up about 20MB.
+<p>
+<ul>
+<li>Interviews: to build - 62MB; installed - 10MB
+<li>NEURON: to build - 25MB ;libraries and executables - 8MB
+</ul>
+<h3>Memory</h3>
+neurondemo requires about 9MB.
+
+<h2>Software</h2>
+<h3> 0: Unix with X11-windows.</h3>
+For MS-Windows <a href="ftp://ftp.neuron.yale.edu/neuron/mswin">
+click here</a>.
+For Mac-OS <a href="ftp://ftp.neuron.yale.edu/neuron/mac">
+click here</a>.
+
+<h3>1: Yacc or Bison</h3>
+NEURON comes in two parts. The first part, called nrnoc, consists of
+everything except the graphical interface and is c source.
+To build this part you will need either yacc or the  gnu version of yacc
+which is called bison -- or else use the pre-translated files ytab.[ch]
+If <tt>which yacc</tt> shows that you have yacc go to step 2.
+The version of bison
+I have used in the past is bison-1.25.
+First see if you have it already installed:
+<pre>
+bison +version
+</pre>
+will print the version number if bison is in your path.
+If not then:
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/bison-1.25.tar.gz">
+Download bison-1.25.tar.gz (200KB)</a> and install it. It's pretty
+straightforward but you should read the installation instructions.
+On my machine,
+<pre>
+	./configure
+	make install
+</pre>
+suffices but that's because I have permission to write to /usr/local.
+<p>
+If for some reason you do not want to build the graphical interface version
+of neuron then there is no need to carry out the following steps.
+
+<h3>2: C++ compiler</h3>
+The second part of NEURON is the graphical interface which is written
+in C++ and makes use of the InterViews graphics library (also written
+in C++). If you don't have C++ then you can install the gnu version.
+The earliest version that will compile Interviews is gcc-2.4.5.
+Before installing it see if you already have it:
+<pre>
+gcc -v
+</pre>
+and if the version isn't later than 2.4.5 (I am using 2.7.2 then):
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/gcc-2.7.2.tar.gz">
+Download gcc-2.7.2.tar.gz (7MB)</a> and install it. This is less
+straightforward so take a look at
+<a href="../other/INSTALL.txt">Installing gcc</a>. Here's a
+<a href="../other/gccinstall.txt">shell script</a>
+that I modify and run when new versions come out that
+makes the installation particularly simple for my particular environment.
+The --prefix options are almost certainly unsuitable for you but at
+least it illustrates the process. You will also need the c++ library.
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/libg++-2.7.1.tar.gz">
+Download libg++-2.7.1.tar.gz (1.6MB)</a>, and install it.
+
+
+<h3>3: InterViews</h3>
+If you have already have a version of interviews installed from my
+iv3.2a.hines7.tar.Z distibution then that will work with NEURON v4.1.
+The only substantive difference between the hines7 and newer hines9 version
+is more efficiency in regexp.c which may make a difference with
+cvode.netconlist. Versions of interviews prior to hines7 will not work
+with NEURON v4.1.
+
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/iv3.2a.hines9.tar.Z">
+Download iv3.2a.hines9.tar.Z (3.1MB)</a> and install it
+.
+This one may drive you nuts unless you read
+<a href="../other/ivinst.txt">Installing InterViews</a>. The most common problems
+are when the x include files and libraries are not in /usr/include/X11 and
+/usr/lib/X11 respectively. In that case you need to specify the paths
+explicitly in iv/src/config/InterViews/local.def.
+The interviews version above can be compiled with gcc2.7.2 which can make
+shared libraries on a variety of machines including LINUX.
+

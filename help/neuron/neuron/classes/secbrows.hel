@@ -1,0 +1,67 @@
+?1 SectionBrowser
+@hsyn
+sb = new SectionBrowser()
+sb = new SectionBrowser(@varSectionList)
+@hdesc
+	Class that makes a visible list of all section names.
+	If the optional SectionList arg is present then only those
+	section names are shown in the browser.
+@hsee
+SectionList, Shape
+@h
+
+? select
+@hsyn
+   .select()
+@hdesc
+	currently accessed section is highlighted.
+@h
+
+? select_action
+@hsyn
+sb.select_action("@varcommand")
+@hdesc
+	Command is executed when an item is selected (single click or
+	dragging) by the mouse. Before execution, the selected section
+	is pushed. (and	popped after the command completes.)
+	Command is executed in the object context in which @{select_action@}
+	registered it.
+@hex
+@code
+begintemplate Cell
+public soma, dend, axon
+create soma, dend[3], axon
+endtemplate Cell 
+ 
+objref sb, cell[3]
+for i=0,2 cell[i] = new Cell()
+sb = new SectionBrowser()
+sb.select_action("act()")
+ 
+proc act() {
+        printf("currently accessed section is %s\n", secname())
+}
+@endcode
+@h
+
+? accept_action
+@hsyn
+sb.accept_action("@varcommand")
+@hdesc
+	Command is executed when an item is accepted (double click) by
+	the mouse. Before execution, the selected section
+	is pushed. (and	popped after the command completes.)
+	Command is executed in the objet context in which the  @{accept_action@}
+	registered it.
+@hex
+@code
+create soma, dend[3], axon
+objref sb
+sb = new SectionBrowser()
+sb.accept_action("act()")
+
+proc act() {
+	printf("currently accessed section is %s\n", secname())
+}
+@endcode
+@h

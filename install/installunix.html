@@ -1,0 +1,151 @@
+<TITLE>NEURON Installation</TITLE>
+<H1>Installation under UNIX</H1>
+
+This version of InterViews and NEURON now uses autoconf and should
+be much easier to install than with the older Imake installation method.
+(those 4.2.1 version files are located in the old_imake subdirectory)
+<p>
+I (Michael Hines) am extremely grateful to Gary Holt (holt@LNC.usc.edu)
+for writing the original autoconf scripts for this package.
+I have modified these scripts in several ways and all bugs should be
+considered my own. Please notify me (michael.hines@yale.edu) if this
+package does not install properly on your machine.
+<p>
+
+<H2> Quick Installation Instructions </H2>
+<H3>Full installation with InterViews (strongly recommended)</H3>
+Download
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/iv-12.tar.gz">iv-12.tar.gz</a>
+into home directory and then
+<pre>
+cd $HOME
+gunzip -c iv-12.tar.gz | tar xf -
+cd iv-12
+config.guess #your hostcpu is printed in the form hostcpu-vendor-osversion
+./configure --prefix=$HOME/iv
+make
+make install
+</pre>
+Download
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/nrn-4.3.1.tar.gz">
+nrn-4.3.1.tar.gz</a>
+into home directory and then
+<pre>
+cd $HOME
+gunzip -c nrn-4.3.1.tar.gz | tar xf -
+cd nrn-4.3.1.tar.gz
+./configure --prefix=$HOME/nrn --with-iv=$HOME/iv
+make
+make install
+#where hostcpu is the output of config.guess in the form hostcpu-vendor-osversion
+$HOME/nrn/bin/hostcpu/neurondemo
+</pre>
+If the last instruction fails, try the last instruction again after
+<pre>
+setenv LD_LIBRARY_PATH "${HOME}/nrn/lib:${HOME}/iv/lib"
+</pre>
+<H3>Installation of NRNIV without GUI classes (no GUI) </H3>
+Download
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/nrn-4.3.1.tar.gz">
+nrn-4.3.1.tar.gz</a>
+into home directory and then
+<pre>
+cd $HOME
+gunzip -c nrn-4.3.1.tar.gz | tar xf -
+cd nrn-4.3.1.tar.gz
+./configure --prefix=$HOME/nrn --without-iv
+make
+make install
+cd $HOME/nrn/share/nrn/demo/release
+$HOME/nrn/bin/nrnivmodl
+hostcpu/special
+</pre>
+If the last command fails you may need a
+<pre>
+setenv LD_LIBRARY_PATH "${HOME}/nrn/hostcpu/lib"
+</pre>
+<H2>NRNOC only (no c++ classes)</H2>
+Download
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/nrn-4.3.1.tar.gz">
+nrn-4.3.1.tar.gz</a>
+into home directory and then
+<pre>
+cd $HOME
+gunzip -c nrn-4.3.1.tar.gz | tar xf -
+cd nrn-4.3.1.tar.gz
+./configure --prefix=$HOME/nrn --without-nrniv
+make
+make install
+cd $HOME/nrn/share/nrn/demo/release
+$HOME/nrn/bin/nrnocmodl
+your_host_cpu/special
+</pre>
+If the last command fails you may need a
+<pre>
+setenv LD_LIBRARY_PATH "${HOME}/nrn/hostcpu/lib"
+</pre>
+
+<H2> More details </H2>
+To install the package first download
+<pre>
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/iv-12.tar.gz">iv-12.tar.gz</a>
+</pre>
+and then download
+<pre>
+<a href="ftp://ftp.neuron.yale.edu/neuron/unix/nrn-4.3.1.tar.gz">nrn-4.3.1.tar.gz</a>
+</pre>
+In most cases the following should be sufficient for a complete installation
+<pre>
+gunzip -c iv-12.tar.gz | tar xf -
+cd iv-12
+#read the <a href="iv12-install">INSTALL</a> file.
+configure --prefix=/where/you/want/it
+make
+make install
+cd ..
+rm -r -f iv-12
+</pre>
+<p>
+
+If you don't specify a prefix it defaults to /usr/local/iv<br>
+I use:
+<pre>
+configure --prefix=$HOME/iv
+</pre>
+<p>
+To install the NEURON part
+<pre>
+gunzip -c nrn-4.2.3.tar.gz | tar xf -
+cd nrn-4.2.3
+#read the <a href="nrn-install">INSTALL</a> file
+configure --prefix=/where/you/want/it --with-iv=/where/you/installed/interviews
+make
+make install
+cd ..
+rm -r -f nrn-4.2.3
+</pre>
+<p>
+If you don't specify a prefix it defaults to /usr/local/nrn<br>
+If you don't specify a --with-iv it first looks in prefix/../iv and then
+in /usr/local/iv
+I use:
+<pre>
+configure --prefix=$HOME/nrn --with-iv=$HOME/iv
+</pre>
+Notice that in my case
+<pre>
+configure --prefix=$HOME/nrn
+</pre>
+would suffice because interviews was installed in $HOME/iv
+<p>
+In general there should no longer be any requirement for CPU, NEURONHOME,
+or LD_LIBRARY_PATH environment variables. However, if you have trouble
+launching NEURON it may be because I am not using libtool generically in
+the configuration files and need an explicit LD_LIBRARY_PATH for interviews
+or for the compiler libraries.
+Installation is successful if
+<pre>
+/where/you/want/it/bin/hostcpu/neurondemo
+</pre>
+creates /where/you/want/it/share/nrn/demo/neuron
+(if it doesn't already exist) and launches the demo.

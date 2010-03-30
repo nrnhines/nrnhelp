@@ -1,0 +1,196 @@
+?1 MechanismType
+@hsyn
+mt = new MechanismType(0)
+mt = new MechanismType(1)
+@hdesc
+Provides a way of iterating over all membrane mechanisms or point
+processes and allows selection via a menu or under hoc control.
+
+The 0 argument creates a list of all available distributed
+membrane mechanisms (as opposed to PointProcesses). eg "hh", "pas", "extracellular". that can
+be inserted into a section.
+
+The 1 argument creates a
+list of all available Point Processes.
+eg. IClamp, AlphaSynapse, VClamp.
+
+Mechanism order is the same as the argument order that created the "special"
+during @{nrnivmodl@} or @{mknrndll@}. Therefore when a saved session depends
+on information in a @{MechanismType@} it is dependent on a particular special
+or dll.
+
+@hex
+@execcode mtype
+@code
+objref mt
+//Print the names of all density mechanisms
+mt = new MechanismType(0)
+strdef mname
+for i=0, mt.count()-1 {
+	mt.select(i)
+	mt.selected(mname)
+	print mname
+}
+@endcode
+@hsee
+MechanismStandard
+@h
+
+? select
+@hsyn
+mt.select("@varname")
+mt.select(@vari)
+@hdesc
+selects either the named mechanism or the i'th mechanism in the list.
+@h
+
+? selected
+@hsyn
+i = mt.selected([@varstrdef])
+@hdesc
+returns the index of the current selection.  If present, strarg is assigned
+to the name of the current selection.
+@h
+
+? remove
+@hsyn
+mt.remove()
+@hdesc
+For distributed mechanisms invoked with the "insert" statement.
+Deletes selected mechanism from currently
+accessed section. A nop if the mechanism is not in the section.
+@h
+
+? make
+@hsyn
+mt.make()
+mt.make(@varobjectvar)
+@hdesc
+@dl
+@dt @{mt.make()@}
+@dd For distributed mechanisms. Inserts selected mechanism into currently
+accessed section.
+@dt @{mt.make(@varobjectvar)@}
+@dd For point processes.  The arg becomes a reference to a new point process
+of type given by the selection.
+Note that the newly created point process is not located in any section.
+Note that if @varobjectvar was the only reference to another object then
+that object is destroyed.
+@endl
+@h
+
+? count
+@hsyn
+i = mt.count()
+@hdesc
+The number of  different mechanisms in the list.
+@h
+
+? menu
+@hsyn
+mt.menu()
+@hdesc
+Inserts a special menu into the currently open @{xpanel@}. The menu
+label always reflects the current selection. Submenu items are indexed
+according to position with the first item being item 0.  When the mouse
+button is released on a submenu item that item becomes the selection
+and the action (if any) is executed.
+@h
+
+? action
+@hsyn
+mt.action("@varcommand")
+@hdesc
+The action to be executed when a submenu item is selected.
+@h
+
+? is_netcon_target
+@hsyn
+boolean =  mt.is_netcon_target(i)
+@hdesc
+The i'th point process has a NET_RECEIVE block and can therefore be
+a target for a @aNetCon object.
+@h
+
+? has_net_event
+@hsyn
+boolean = mt.has_net_event(i)
+@hdesc
+The i'th point process has a net_event call in its NET_RECEIVE block
+and can therefore be a source for a @aNetCon object.
+This means it is @aNetCon stimulator or that
+the point process can be used as an artificial neural network cell.
+@h
+
+? is_artificial
+@hsyn
+boolean = mt.is_artificial(i)
+@hdesc
+The i'th point process is an ARTIFICIAL_CELL
+and can therefore be a source for a @aNetCon object.
+This means it is @aNetCon stimulator or that
+the point process can be used as an artificial neural network cell.
+
+This seems to have, but does not, equivalent functionality to
+@ahas_net_event and was introduced because ARTIFICIAL_CELL objects are no
+longer located in sections. Some ARTIFICIAL_CELLs such as the PatternStim
+do not make use of net_event in their implementation, and some PointProcesses
+do use net_event and must be located in sections for their proper function,
+e.g. reciprocal synapses.
+@h
+
+
+? pp_begin
+@hsyn
+obj = mt.pp_begin()
+@hdesc
+Initializes an iterator used to iterate over point processes of
+a particular type in the currently accessed section.
+Returns the first point process in the currently accessed
+section having the type specified by the @aselect#MechanismType
+statement. This only works if the the MechanismType was instantiated
+with the (1) argument. If there is no such point process in the
+section the method returns NULLobject. Note that, prior to version
+6.2, although
+the x=1 node is normally
+considered to be part of the section, the parent node
+was not looked at (normally x = 0) unless the section was the
+root of the tree. As of version 6.2, both the 0 and 1 locations
+are looked at and if the point process used the section to locate
+it, then it is returned. If the point process used the child or
+parent section to locate it, it is not returned.
+@hex
+@execcode ppbegin
+@code
+create cable
+access cable
+nseg = 5
+objref stim[3]
+for i=0,2 stim[i] = new IClamp(i/2)
+
+objref mt, pp
+mt = new MechanismType(1)
+mt.select("IClamp")
+for (pp = mt.pp_begin(); object_id(pp) != 0; pp = mt.pp_next()) {
+	x = pp.get_loc()
+	printf("%s located at %s(%g)\n", pp, secname(), x)
+	pop_section()
+}
+@endcode
+@h
+
+? pp_next
+@hsyn
+obj = mt.pp_next()
+@hdesc
+Returns the next point process of the type and in the section that
+were specified in the earlier call to @app_begin#MechanismType .
+When there are no more point processes, the return value is NULLobject.
+@h
+
+? internal_type
+@hsyn
+internal_type = mt.internal_type()
+@hdesc
+Return the internal type index of the selected mechanism.
+@h

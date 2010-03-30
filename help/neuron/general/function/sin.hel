@@ -1,0 +1,95 @@
+?p neuron.exe general functions
+?1 math
+The above math functions return a double precision value and take a double
+precision argument. The exception is @aatan2 with two double precision arguments.
+@hdiag
+Arguments which are out of range give an argument domain diagnostic.
+
+These functions call the library routines supplied by the compiler.
+@h
+
+?2 sin
+
+trigonometric function of radian argument.
+
+see @asin#Vector for the @aVector class.
+?2 cos
+trigonometric function of radian argument.
+
+see @asin#Vector
+?2 atan
+returns the arc-tangent of y/x in the range -PI/2 to PI/2. (x > 0)
+
+?2 atan2
+@hsyn
+radians = atan2(y, x)
+@hdesc
+returns the arc-tangent of y/x in the range -PI < radians <= PI. y and x
+can be any double precision value, including 0. If both are 0 the value
+returned is 0.
+Imagine a right triangle with base x and height y. The result
+is the angle in radians between the base and hypotenuse
+@hex
+@execcode atan2
+@code
+atan2(0,0)
+for i=-1,1 { print atan2(i*1e-6, 10) }
+for i=-1,1 { print atan2(i*1e-6, -10) }
+for i=-1,1 { print atan2(10, i*1e-6) }
+for i=-1,1 { print atan2(-10, i*1e-6) }
+atan2(10,10)
+atan2(10,-10)
+atan2(-10,10)
+atan2(-10,-10)
+@endcode
+@h
+?2 tanh
+hyperbolic tangent.
+see @atanh#Vector for the @aVector class.
+
+?2 log
+logarithm to the base e
+see @alog#Vector for the @aVector class.
+?2 log10
+logarithm to the base 10
+
+see @alog10#Vector for the @aVector class.
+
+?2 exp
+@hdesc
+returns the exponential function to the base e
+
+When exp is used in model descriptions, it is often the
+case that the cvode variable step integrator extrapolates
+voltages to values which return out of range values for the exp (often used
+in rate functions). There were so many of these false warnings that it was
+deemed better to turn off the warning message when Cvode is active.
+In any case the return value is exp(700). This message is not turned off
+at the interpreter level or when cvode is not active.
+@code
+for i=690, 710 print i, exp(i)
+@endcode
+@h
+
+?2 sqrt
+square root
+
+see @asqrt#Vector for the @aVector class.
+?2 int
+returns the integer part of its argument (truncates toward 0).
+?2 abs
+absolute value
+
+see @aabs#Vector for the @aVector class.
+
+?2 erf
+normalized error function
+@eqn
+\[{\rm erf}(z) = \frac{2}{\sqrt{\pi}} \int_{0}^{z} e^{-t^2} dt\]
+@endeqn
+?2 erfc
+@dd returns 1.0 - @{erf(z)@} but on sun machines computed by other methods
+that avoid cancellation for large z.
+
+
+@h

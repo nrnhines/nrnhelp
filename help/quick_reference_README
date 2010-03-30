@@ -1,0 +1,13 @@
+2005-01-13
+19:30 quick_reference_maker.sh
+
+- now requires two arguments
+- usage:
+  quick_reference_maker ncol bColor
+    ncol: 
+      number of columns
+      tested for 1 to 5
+    bColor: 
+      0 or 1 
+      0 no color
+      1 colorizes html pages

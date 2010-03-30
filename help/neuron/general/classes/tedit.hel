@@ -1,0 +1,42 @@
+?p neuron.exe general classes
+
+?1 TextEditor
+@hsyn
+e = new TextEditor()
+e = new TextEditor(string)
+e = new TextEditor(string, rows, columns)
+@hdesc
+For editing or displaying multiline text. Default is 5 rows, 30 columns.
+@hbug
+At this time no scroll bars or even much functionality. Mouse editing
+and emacs style works.
+@h
+
+? text
+@hsyn
+string = e.text()
+string = e.text(string)
+@hdesc
+Returns the text of the TextEditor in a strdef. If arg exists, replaces
+the text by the string and returns the new text (string).
+@h
+
+? readonly
+@hsyn
+boolean = e.readonly()
+boolean = e.readonly(boolean)
+@hdesc
+Returns 1 if the TextEditor in read only mode.
+Returns 0 if text entry by the user is allowed.
+Change the mode with the argument form using 0 or 1.
+@h
+
+? map
+@hsyn
+e.map()
+e.map(title)
+e.map(title, left, bottom, width, height)
+@hdesc
+Map the text editor onto the screen at indicated coordinates with
+indicated title bar
+@h

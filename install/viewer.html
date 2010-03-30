@@ -1,0 +1,44 @@
+<TITLE>NEURON as a mosaic viewer</TITLE>
+<H1>Running NEURON simulations from mosaic</H1>
+
+<H2> Simple, one file simulations. </h2>
+<p>
+When you download a simulation file with a .hoc extension you can
+automatically run it, ie., NEURON will run in a new xterm window and execute
+the .hoc file. When you quit the simulation ((control)d in the xterm window)
+the xterm will go away.
+
+<p>
+Warning: There is no security with this feature since .hoc files can
+execute arbitrary shell scripts. If you do not install it you can always
+download the file into some name, examine it, and then execute it explicitly
+with NEURON.
+
+<p>
+You need to edit two files in your home directory: .mime.types and .mailcap <br>
+
+<p>
+Add the following lines to $HOME/.mime.types <br>
+<pre>
+application/neuron	hoc
+</pre>
+
+<p>
+Add the following lines to $HOME/.mailcap <br>
+<pre>
+application/neuron; mos2nrn %s
+</pre>
+
+The mos2nrn script is found in $NEURONHOME/bin
+
+<H2> <a href="viewer2.html">Complex simulations </a></h2>
+...requiring multiple files, directories, and creation of a special version
+of NEURON.
+<p>
+
+<H2> <a href="viewer3.html">Complex simulations controlled by mosaic</a></h2>
+...running neuron and sending commands to it. Useful for tutorials and
+sequences of simulations using one neuron process.
+<p>
+
+

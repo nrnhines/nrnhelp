@@ -1,0 +1,16 @@
+? symbols
+
+@hname
+symbols --- type the names of HOC functions and variables
+
+@hsyn
+@{symbols()@}
+
+@hdesc
+Types a list of functions and variable names defined in HOC.  Dimensions
+of arrays are also indicated.
+
+@hbug
+No longer works. The nearest replacement is @aSymChooser .
+
+@h

@@ -1,0 +1,54 @@
+<TITLE> NEURON abstract </TITLE
+<header> Based on the 1993 Neuroscience Meeting Abstract </header>
+<P>
+<H1>A NEURON simulation program.</H1>  Michael Hines & John W. 
+Moore.  Dept.  Neurobiology, Duke Univ.  Med.  Cntr. 
+Durham, NC 27710
+<P>
+     NEURON is a nerve simulation program which is designed
+to solve two kinds of problems: 1) where cable properties of
+cells play an important role, possibly including
+extracellular potential close to the membrane, and 2) where
+cell membrane properties are complex, involving many
+ion-specific channels and ion accumulation. 
+<P>
+    NEURON is designed around the notion of continuous cable
+"sections" which are connected together to form any kind of
+branched cable and which are endowed with properties which
+vary continuously with position along the section.  The
+design goal is to keep entirely separate the physical
+properties of the neuron from the numerical issue of size of
+spatial compartments. 
+<P>
+     User defined membrane properties are described by
+expressing models in terms of kinetic schemes and sets of
+simultaneous equations.  Membrane voltage and states are
+computed efficiently by compiling these model descriptions
+and using an implicit integration method optimized for
+branched structures. 
+<P>
+     NEURON realizes a tremendous degree of flexibility by
+using an object oriented interpreter to setup the physical
+properties of the cables, define the appearance of the
+graphical interface, control the simulation, and plot the
+results.  The default graphical interface is suitable for
+initial exploratory simulations, setting parameters, common
+control of voltage and current stimuli, and graphing
+variables as a function of time and position. 
+<P>
+    A sample of the appearance of  NEURON is given by:
+
+<UL>
+<LI>Simple <A HREF="mempatch.html">membrane patch</A>
+with Hodgkin-Huxley channels.
+
+<LI><A HREF="stylmotor.html">Stylized motorneuron</A> with three synapses.
+
+<LI><A HREF="recon3d.html">Three-dimensional</A>
+reconstruction of a pyramidal cell.
+
+<LI>Vesicle release at the <A HREF="nmj.html">neuromuscular junction</A>
+resulting from the
+interaction of HH and calcium channels, sodium-calcium exchange, calcium
+pump, and internal calcium diffusion. 
+</UL>

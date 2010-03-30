@@ -1,0 +1,3 @@
+latex ref
+dvips -o help.ps ref
+#ghostview help.ps

@@ -1,0 +1,23 @@
+cat dict temp | awk '
+BEGIN {
+	dict = 1;
+}
+/^[^a-zA-Z]/ {
+	dict = 0;
+}
+
+dict==1 && /[^a-zA-Z]/ {
+	p[$1] = $2;
+}	
+
+dict==0 && /@P/ {
+	for (i=0; i < NF; ++i) {
+		if (index($i, "@P")) {
+print substr($i, 3, length($i) - 2);
+			$i = "@a" p[substr($i, 3, length($i) - 2)];
+		}
+	}
+}
+
+dict == 0 { print $0;}
+' > temp5
