@@ -96,7 +96,7 @@ the section) so
 @hsyn
 boolean = section_exists("name", [index], [object])
 @hdesc
-	Returns 0 if the section defined by the args exists and can be used
+	Returns 1 if the section defined by the args exists and can be used
 as a currently accessed section. Otherwise, returns 0.
 The index is optional and if nonzero, can be incorporated into the name as
 a literal value such as dend[25]. If the optional object arg is present, that
