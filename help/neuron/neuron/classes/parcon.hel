@@ -26,6 +26,20 @@ waiting for other cpu's to finish results but constantly take a task
 from the bulletin board and put the result back onto the bulletin board. 
 Communication overhead is not bad if each task takes a second or more. 
 
+When using the Bulletin board with Python, the methods
+@asubmit , @acontext , @apack , and @apost
+have been augmented and @apyret and @aupkpyobj have been introduced
+to allow a more Pythonic style. I.e. The executable
+string for submit and context may be replaced by a Python callable that
+returns a Python Object (retrieved with pyret), the args to submit, context, pack, and post
+may be Python Objects, and a bulletin board message value which is a Python
+Object may be retrieved with upkpyobj. At the end of the
+following hoc parallelization and discussion the same example is
+repeated as a Python parallelization. The only restriction is that any
+python object arguments or return values must be pickleable (see
+http://docs.python.org/library/pickle.html. As of this writing, hoc
+objects are not pickleable.)
+
 The simplest form of parallelization of a loop
 from the users point of view is
 @code
@@ -150,6 +164,34 @@ and not only do we take the hit of repeated evaluation of gnabar_hh
 but the statement must be interpreted each time. A run must be quite
 lengthy to amortize this overhead.
 
+Python version
+
+Here we re-implement the first example above as a Python program
+@code
+from neuron import h
+
+def f(arg):             # a function with no context that *CHANGES*
+   return arg*arg       #except its argument
+
+pc = h.ParallelContext()
+pc.runworker()          # master returns immediately, workers in
+                        # infinite loop
+s = 0
+if pc.nhost() == 1:     # use the serial form
+   for i in range(1, 21):
+      s += f(i)
+else:                   # use the bulletin board form
+   for i in range(1, 21): # scatter processes
+      pc.submit(f, i)   # any context needed by f had better be the same on all$
+   while pc.working():  # gather results
+      s += pc.pyret()   # the return value for the executed function
+print s
+pc.done()               # wait for workers to finish printing
+@endcode
+Note the replacement of the string "f" in the submit method by a Python
+Callable object and the retrieval of the result by the pyret() method
+instead of retval().
+
 The PVM (parallel virtual machine)
 should be setup so that it allows
 execution on all hosts of the csh script $NEURONHOME/bin/bbsworker.sh .
@@ -223,6 +265,7 @@ pc.submit("statement\n")
 pc.submit("function_name", arg1, ...)
 pc.submit(object, "function_name", arg1, ...)
 pc.submit(userid, ..as above..)
+pc.submit(python_callable, arg1, ...)
 @hdesc
 Submits statement for execution by any host. Submit returns the userid not the
 system generated global id of the task.
@@ -266,6 +309,7 @@ func function_name() {local id
    id = hoc_ac_
    $o1.reverse()
    pc.post(id, $o1)
+   return 0
 }
 ...
 while( (id = pc.working) != 0) {
@@ -284,9 +328,16 @@ all hosts, when they start up, execute the same code that creates
 these objects. If you start creating these objects after the worker
 code diverges from the master (after pc.runworker) you really have to
 know what you are doing and the bugs will be VERY subtle.
+
+The python_callable form allows args to be any Python objects as well
+as numbers, strings, or hoc Vectors. The return is a Python object
+and can only be retrieved with @apyret . The Python objects must be
+pickleable (hoc objects are not presently pickleable). Python object arguments
+may be retrieved with @aupkpyobj .
 @hsee
 working#ParallelContext
 retval#ParallelContext userid#ParallelContext
+pyret#ParallelContext
 @hbug
 submit does not return the system generated unique id of the task but
 either the first arg (must be a positive integer to be a userid) or
@@ -335,6 +386,8 @@ while ((id = pc.working) > 0) {
    print id, pc.retval
 }
 @endcode
+Note that if the submitted task was specified as a Python callable, then
+@apyret would have to be used in place of @aretval .
 
 Note that if the submission did not have an explicit userid then
 all the arguments of the executed function may be unpacked.
@@ -376,6 +429,7 @@ function f() { local id
 @hsee
 submit#ParallelContext
 retval#ParallelContext userid#ParallelContext
+pyret#ParallelContext
 @hbug
 Submissions are grouped according to parent task id and not by
 parallel context instance. If suggested by actual experience, the
@@ -394,6 +448,16 @@ The return value of the function executed by the task gathered by the
 last @aworking#ParallelContext call.
 If the statement form of the submit is used then the return value
 is the value of hoc_ac_ when the statement completes on the executing host.
+@h
+
+? pyret
+@hsyn
+python_object = pc.pyret()
+@hdesc
+If a task is submitted defined as a Python callable then the return
+value can be any Python object and can only be retrieved with pyret().
+This function can only be called once for the task result gathered
+by the last @aworking#ParallelContext call.
 @h
 
 ? userid
@@ -460,12 +524,14 @@ pc.context("statement\n")
 pc.context("function_name", arg1, ...])
 pc.context(object, "function_name", arg1, ...)
 pc.context(userid, ..as above..)
+pc.context(python_callable, arg1, ...)
 @hdesc
 The arguments have the same semantics as those of the @asubmit#ParallelContext method.
 The function or statement is executed on every worker host
 but is not executed on the master. pc.context can only be
 called by the master. The workers will execute the context statement
 when they are idle or have completed their current task.
+It probably only makes sense for the python_callable to return None.
 
 There is no return in the
 sense that @aworking#ParallelContext does not return when one
@@ -523,7 +589,8 @@ pc.post(key, ...)
 @hdesc
 Post the message with the address key, (key may be a string or scalar),
 and a body consisting of any number of @apack#ParallelContext calls since
-the last post, and any number of arguments of type scalar, Vector, or strdef.
+the last post, and any number of arguments of type scalar, Vector, strdef
+or Python object.
 
 Later unpacking of the message body must be done in the same order as
 this posting sequence.
@@ -548,9 +615,10 @@ get the first unpacked values. Scalar, Vectors, and strdef may be
 unpacked. Scalar arguments must be pointers to
 a variable. eg @{&x@}. Unpacked Vectors will be resized to the
 correct size of the vector item of the message.
+To unpack Python objects, @aupkpyobj must be used.
 @hsee
 upkstr#ParallelContext upkscalar#ParallelContext
-upkvec#ParallelContext
+upkvec#ParallelContext upkpyobj#ParallelContext
 @h
 
 ? look
@@ -589,7 +657,8 @@ take#ParallelContext look#ParallelContext
 @hsyn
 pc.pack(...)
 @hdesc
-Append arguments consisting of scalars, Vectors, and strdefs into a message
+Append arguments consisting of scalars, Vectors, strdefs,
+and pickleable Python objects into a message
 for a subsequent post.
 @hsee
 post#ParallelContext
@@ -605,9 +674,11 @@ agree with the order in which the message was constructed with post
 and pack.
 Note that scalar items must be retrieved with pointer syntax as in
 @{&soma.gnabar_hh(.3)@}
+To unpack Python objects, @aupkpyobj must be used.
 @hsee
 upkscalar#ParallelContext
 upkvec#ParallelContext upkstr#ParallelContext
+upkpyobj#ParallelContext
 @h
 
 ? upkscalar
@@ -634,6 +705,15 @@ vec = pc.upkvec(vecsrc)
 Copy the next item in the unpacking
 sequence into vecsrc (if that arg exists, it will be resized if necessary).
 If the arg does not exist return a new Vector.
+@h
+
+? upkpyobj
+@hsyn
+python_object = pc.upkpyobj()
+@hdesc
+Return a reference to the (copied via pickling/unpickling)
+Python object which must be the next item in the unpacking
+sequence of the message retrieved by the previous take, look, or look_take.
 @h
 
 ? time

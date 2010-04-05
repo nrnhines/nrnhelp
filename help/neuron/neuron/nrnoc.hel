@@ -163,7 +163,8 @@ Obsolete
 
 ? fit_praxis
 @hsyn
- fit_praxis(@varn, "@varfunname", &@varx[0])
+min = fit_praxis(@varn, "@varfunname", &@varx[0])
+min = fit_praxis(@varn, "@varfunname", @varVector)
 @hdesc
 	This is the principal axis method for minimizing a function. See praxis.c
 	in the scopmath library.
@@ -216,8 +217,9 @@ list of @varn arguments. ie @{numarg()==n@}.
 
 ? pval_praxis
 @hsyn
-pval_praxis(@vari)
-pval_praxis(@vari, &@varpaxis[0])
+pval = pval_praxis(@vari)
+pval = pval_praxis(@vari, &@varpaxis[0])
+pval = pval_praxis(@vari, @varVector)
 @hdesc
 	Return the ith principal value. If the second argument is present, @{pval_praxis@} also fills
 	the vector with the ith principal axis.
