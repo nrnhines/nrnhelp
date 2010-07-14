@@ -198,6 +198,7 @@ list of @varn arguments. ie @{numarg()==n@}.
 ? attr_praxis
 @hsyn
  attr_praxis(@vartolerance, @varmaxstepsize, @varprintmode)
+previous_index = attr_praxis(mcell_ran4_index)
 @hdesc
 	Set the attributes of the praxis method. This must be called before
 	the first call to @afit_praxis .
@@ -213,6 +214,10 @@ list of @varn arguments. ie @{numarg()==n@}.
 @dt printmode=1,2,3
 @dd	more and more verbose
 @endl
+The single argument form causes praxis to pick its random numbers from
+the the mcellran4 generator beginning at the specified index. This
+allows reproducible fitting. The return value is the previously picked
+index. (see @amcell_ran4 )
 @h
 
 ? pval_praxis

@@ -812,4 +812,18 @@ m.from_vector(m.to_vector().indgen).printf
 Works for sparse matrices but all elements will exist so not really sparse.
 @h
 
+?2 cholesky_factor
+@hsyn
+mc = msrcdest.cholesky_factor()
+@hdesc
+Cholesky factorization in place. msrcdest must be a symetric positive
+definite matrix. On return, it is a lower triangular matrix, L, such that
+L*Ltranspose = msrc
+@hex
+@execcode cholesky
+@code
+@endcode
+@hsee cholesky_solve
+@h
+
 ?p neuron.exe general classes
