@@ -54,7 +54,7 @@ See $NEURONHOME/src/nrnoc/stim.mod
 Single pulse current clamp point process. This is an electrode current
 so positive amp depolarizes the cell. i is set to amp when t is within
 the closed interval del to del+dur. Time varying current stimuli can
-be simulated by setting del=0, amp=1e9 and playing a vector into amp
+be simulated by setting del=0, dur=1e9 and playing a vector into amp
 with the @aplay @aVector method.
 @h
 ?1 AlphaSynapse
