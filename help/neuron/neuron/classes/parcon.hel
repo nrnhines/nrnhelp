@@ -7,7 +7,9 @@ pc = new ParallelContext(nhost)
 @hdesc
  "Embarrassingly" parallel computations using a Bulletin board style
 analogous to LINDA. (But see the @aParallelNetwork#ParallelContext ,
-@aParallelNetManager and @aParallelTransfer discussions.)
+@aParallelNetManager and @aParallelTransfer discussions.
+Also see @aSubWorld#ParallelContext for a way to simultaneously use
+the bulletin board and network simulations involving global identifiers.)
 Useful when doing weeks or months worth of
 simulation runs each taking more than a second and where not much
 communication is required.  Eg.  parameter sensitivity, and some forms
@@ -1093,6 +1095,242 @@ pc.broadcast(vector, root)
 Every host gets the value from the host with pc.id == root.
 The vector is resized to the size of the root host vector.
 The return value is the length of the string or the size of the vector.
+@h
+
+?1 SubWorld
+@hdesc
+Without the methods discussed in this section,
+the bulletin board and parallel network styles cannot be used together.
+The parallel network style relies heavily on synchronization through
+the use of blocking collective communication
+methods and load balance is the primary consideration. The bulletin board
+style is assynchronous and a process works on a submitted task generally
+without communicating with other tasks except possibly and indirectly through
+posting and taking messages on the bulletin board.
+Without the subworld method, at most the network style can be used and then
+switched to bulletin board style. The only way to simulate a parallel
+network after executing @arunworker#ParallelContext would be to utilize
+the @acontext#ParallelContext method. In particular, without subworlds,
+it is impossible to correctly submit bulletin board tasks, each of which
+simulates a network specfied with the @aParallelNetwork#ParallelContext
+methods --- even if the network is complete on a single process.
+
+The @asubworlds method divides the world of processors into subworlds,
+each of which can execute a task that independently and assynchronously
+creates and simulates (and destroys if the task networks are different)
+a separate
+network described using the @aParallelNetwork#ParallelContext and
+@aParallelTransfer#ParallelContext methods. The task, executing
+in the subworld can also make use of the @aMPI#ParallelContext collectives.
+Different subworlds can use the same global identifiers without
+interference and the spike communication, transfers, and MPI collectives
+are localized to within a subworld. I.e. in MPI terms,
+each subworld utilizes a distinct MPI communicator. In a subworld, the
+@aid#ParallelContext and @anhost#ParallelContext refer to the rank and
+number of processors in the subworld. (Note that every subworld has
+a @aid#ParallelContext == 0 rank processor.)
+
+Only the rank @aid#ParallelContext == 0 subworld processors communicate
+with the bulletin board. Of these processors, one ( @aid_world == 0) is
+the master processor and the others are the workers. The master
+submits tasks to the bulletin board (and executes a task if no results
+are available) and the workers execute tasks and post the results
+to the bulletin board. Remember, all the workers also have @aid#ParallelContext
+== 0 but different @aid_world and @aid_bbs ranks. The subworld
+@aid#ParallelContext ranks greater than 0 are not called workers --- their
+global rank is @aid_world but their bulletin board rank, @aid_bbs is -1.
+When a worker (or the master) receives a task to execute, the exact same
+function with arguments that define the task will be executed on all the
+processes of the subworld. A subworld is exactly analogous to the old
+world of a network simulation in which processes distinguish themselves
+by means of @aid#ParallelContext which is unique among
+the @anhost#ParallelContext processes in the subworld.
+
+A runtime error will result if an @aid_bbs == -1 rank processor tries
+to communicate with the bulletin board, thus the general idiom for
+a task posting or taking information from the bulletin board should be either
+@{ if (pc.id == 0) { ... } @} or @{ if (pc.id_bbs != -1) { ... } @}.
+The latter is more general since the former would not be correct if
+@asubworlds has NOT been called since in that case
+@{ pc.id == pc.id_world == pc.id_bbs @} and
+@{ pc.nhost == pc.nhost_world == pc.nhost_bbs @}
+
+@h
+
+? subworlds
+@hsyn
+pc.subworlds(subworld_size)
+@hdesc
+Divides the world of all processors
+into @anhost_world / subworld_size subworlds.
+Note that the total number of processes, nhost_world, should be
+an integer multiple of subworld_size.
+The most useful subworld sizes are 1 and @anhost_world .
+After return, for the processes
+in each subworld, @anhost#ParallelContext is equal to subworld_size
+and the @aid#ParallelContext is the rank of the process with respect
+to the subworld of which it is a part.
+
+Each subworld has its own
+unique MPI communicator for the @aMPI functions such
+as @abarrier#MPI and so those collectives do not affect other subworlds.
+All the @aParallelNetwork notions are local to a subworld. I.e. independent
+networks using the same gids can be simulated simultaneously in
+different subworlds. Only rank 0 of a subworld ( @aid#ParallelContext
+== 0) can use the bulletin board and has a non-negative @anhost_bbs
+and @aid_bbs .
+
+Thus the bulletin board interacts with @anhost_bbs processes
+each with @aid#ParallelContext == 0. And each of those rank 0 processes
+interacts with @anhost#ParallelContext processes using MPI commands
+isolated within each subworld.
+
+Probably the most useful values of subworld_size are 1 and @anhost_world .
+The former uses the bulletin board to communicate between all processes
+but allows the use of gid specified networks within each process. ie.
+one master and nhost_world - 1 workers.
+The latter uses all processes to simulate a parallel network and there
+is only one process, the master,
+( @aid_world == 0 ) interacting with the bulletin board.
+
+@hex
+The following example is intended to be run with 6 processes. The subworlds
+function with an argument of 3 will divide the 6 process world into
+two subworlds each with 3 processes. To aid in see how the computation
+progresses the function "f" prints its rank and number of processors
+for the world, bulletin board, and net (subworld) as well as argument,
+return value, and bulletin board defined userid. Prior to the runworker
+call all processes call f. After the runworker call, only the master
+process returns and calls f. The master submits 4 tasks and then enters
+a while loop waiting for results and, when a result is ready, prints
+the userid, argument, and return value of the task.
+
+@code
+objref pc
+pc = new ParallelContext()
+{pc.subworlds(3)}
+func f() {local ret
+  ret = pc.id_world*100 + pc.id_bbs*10 + pc.id 
+  printf( \
+   "userid=%d arg=%d ret=%03d  world %d of %d  bbs %d of %d  net %d of %d\n", \ 
+   hoc_ac_, $1, ret, \
+   pc.id_world, pc.nhost_world, pc.id_bbs, pc.nhost_bbs, pc.id, pc.nhost)
+  system("sleep 1")
+  return ret
+}
+hoc_ac_ = -1
+if (pc.id_world == 0) { printf("before runworker\n") }
+{f(1)}
+{pc.runworker()}
+{printf("\nafter runworker\n") f(2) }
+
+{printf("\nbefore submit\n")}
+for i=3, 6 { pc.submit("f", i) }
+{printf("after submit\n")}
+
+while((userid = pc.working()) != 0) {
+  arg = pc.upkscalar()
+  printf("result userid=%d arg=%d return=%03d\n", \
+    userid, arg, pc.retval)
+}
+
+{printf("\nafter working\n") f(7) }
+{pc.done()}
+quit()
+@endcode
+
+If the above code is saved in temp.hoc and executed with 6 processes using
+@{mpiexec -n 6 nrniv -mpi temp.hoc@} then the output will look like
+(some lines may be out of order)
+@code
+$ mpiexec -n 6 nrniv -mpi temp.hoc
+numprocs=6
+NEURON -- VERSION 7.2 (454:bb5c4f755f59) 2010-07-30
+Duke, Yale, and the BlueBrain Project -- Copyright 1984-2008
+See http://www.neuron.yale.edu/credits.html
+
+before runworker
+userid=-1 arg=1 ret=000  world 0 of 6  bbs 0 of 2  net 0 of 3
+userid=-1 arg=1 ret=192  world 2 of 6  bbs -1 of -1  net 2 of 3
+userid=-1 arg=1 ret=492  world 5 of 6  bbs -1 of -1  net 2 of 3
+userid=-1 arg=1 ret=391  world 4 of 6  bbs -1 of -1  net 1 of 3
+userid=-1 arg=1 ret=091  world 1 of 6  bbs -1 of -1  net 1 of 3
+userid=-1 arg=1 ret=310  world 3 of 6  bbs 1 of 2  net 0 of 3
+
+after runworker
+userid=-1 arg=2 ret=000  world 0 of 6  bbs 0 of 2  net 0 of 3
+
+before submit
+after submit
+userid=21 arg=4 ret=000  world 0 of 6  bbs 0 of 2  net 0 of 3
+userid=20 arg=3 ret=310  world 3 of 6  bbs 1 of 2  net 0 of 3
+userid=20 arg=3 ret=391  world 4 of 6  bbs -1 of -1  net 1 of 3
+userid=21 arg=4 ret=091  world 1 of 6  bbs -1 of -1  net 1 of 3
+userid=21 arg=4 ret=192  world 2 of 6  bbs -1 of -1  net 2 of 3
+userid=20 arg=3 ret=492  world 5 of 6  bbs -1 of -1  net 2 of 3
+result userid=21 arg=4 return=000
+userid=22 arg=5 ret=091  world 1 of 6  bbs -1 of -1  net 1 of 3
+userid=22 arg=5 ret=000  world 0 of 6  bbs 0 of 2  net 0 of 3
+userid=22 arg=5 ret=192  world 2 of 6  bbs -1 of -1  net 2 of 3
+result userid=22 arg=5 return=000
+userid=23 arg=6 ret=000  world 0 of 6  bbs 0 of 2  net 0 of 3
+userid=23 arg=6 ret=192  world 2 of 6  bbs -1 of -1  net 2 of 3
+userid=23 arg=6 ret=091  world 1 of 6  bbs -1 of -1  net 1 of 3
+result userid=23 arg=6 return=000
+result userid=20 arg=3 return=310
+
+after working
+userid=0 arg=7 ret=000  world 0 of 6  bbs 0 of 2  net 0 of 3
+$
+@endcode
+One can see from the output that before the runworker call, all the
+processes called f. After runworker, only the master returned so there
+is only one call to f. All tasks were submitted to the bulletin
+board before any task generated print output. In this case, during
+the while loop, the master started on the task with arg=4 and the two
+associates within that subworld also executed f(4). Only the master
+returned the result of f(4) to the bulletin board (the return values
+of the two subworld associates were discarded). The master and its network
+associates also executed f(5) and f(6). f(3) was executed by the world
+rank 3 process (bbs rank 1, net rank 0) and that subworlds two net associates.
+@h
+
+? nhost_world
+@hsyn
+numprocs = pc.nhost_world()
+@hdesc
+Total number of processes in all subworlds. Equivalent to
+@anhost#ParallelContext when @asubworlds has not been executed.
+@h
+
+? id_world
+@hsyn
+rank = pc.id_world()
+@hdesc
+Global world rank of the process. This is unique among all processes
+of all subworlds and ranges from 0 to @anhost_world - 1
+@h
+
+? nhost_bbs
+@hsyn
+numprocs = pc.nhost_bbs()
+@hdesc
+If @asubworlds has been called, nhost_bbs() returns the number of
+subworlds if @aid#ParallelContext == 0 and -1 for all other ranks in
+the subworld.
+If subworlds has NOT been called then nhost_bbs, nhost_world, and nhost
+are the same.
+@h
+
+? id_bbs
+@hsyn
+rank = pc.id_bbs()
+@hdesc
+If @asubworlds has been called id_bbs() returns the subworld rank
+if @aid#ParallelContext == 0 and -1 for all other ranks in the
+subworld.
+If subworlds has not been called then id_bbs, id_world, and id are the
+same.
 @h
 
 ?1 ParallelNetwork

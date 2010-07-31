@@ -309,8 +309,73 @@ On return dest_vector.size will be the number of states.
 ? dstates
 @hsyn
 cvode.dstates(dest_vector)
-	Fill the destination @aVector with the values of d(state)/dt.
 @hdesc
+	Fill the destination @aVector with the values of d(state)/dt.
+@h
+
+? f
+@hsyn
+cvode.f(t, yvec, ypvec)
+@hdesc
+returns f(yvec, t) in ypvec. f is the existing model.
+Size of yvec must be equal to the number of states ( ie vector size
+returned by @astates#CVode ). ypvec will be resized to the proper size.
+Note that the order of the states in the vector is indicated by the
+names returned by @astatename#CVode
+@hbug
+Works only for global variable time step method.
+Works only with single thread.
+@h
+
+? yscatter
+@hsyn
+cvode.yscatter(yvec)
+@hdesc
+Fills the state variables with the values specified in yvec.
+Size of yvec must be equal to the number of states ( ie vector size
+returned by @astates#CVode ). Note that active CVode requires a subsequent
+@are_init#CVode if one wishes to integrate from the yvec state point.
+@hbug
+Works only for global variable time step method.
+Works only with single thread.
+@h
+
+? ygather
+@hsyn
+cvode.ygather(yvec)
+@hdesc
+Fills yvec with the state variables (will be resized to the number of
+states). This is analogous to cvode.states after a cvode.re_init .
+@hbug
+Works only for global variable time step method.
+Works only with single thread.
+@h
+
+? fixed_step
+@hsyn
+cvode.fixed_step()
+@hdesc
+Uses the fixed step method to advance the simulation by @adt#globals .
+The initial condition is whatever state values are present (eg subsequent
+to a previous integration step or @ayscatter#CVode or @af#CVode or explicitly
+user modified state values ). The model state values are those after the
+fixed step integration (but are NOT the same as the current state defined
+by CVode and returned by @astates#CVode (that would be the case only after
+a subsequent @are_init#CVode .)) To get the new current states in CVode
+vector order, use @aygather#CVode .
+
+Valid under all circumstances. This is basically an fadvance() using
+the fixed step method and avoids the overhead of
+@code
+cvode.active(0)
+fadvance()
+cvode.active(1)
+@endcode
+in order to allow the use of the CVode functions assigning state and
+evaluating states and dstates/dt
+@hbug
+@adstates#CVode are invalid and should be determined by a call to
+@af#CVode using the current state from @aygather#CVode .
 @h
 
 ? error_weights
@@ -908,3 +973,4 @@ model author take careful account of events but I see no way
 to have them automatically taken care of.
 
 @h
+
