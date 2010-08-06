@@ -52,7 +52,7 @@ func f() {              // a function with no context that *CHANGES*
 objref pc
 pc = new ParallelContext()
 pc.runworker()          // master returns immediately, workers in
-                        // infinite loop
+                        // infinite loop running and jobs from bulletin board
 s = 0
 if (pc.nhost == 1) {    // use the serial form
    for i=1, 20 {
@@ -67,7 +67,7 @@ if (pc.nhost == 1) {    // use the serial form
    }
 }
 print s
-pc.done                 // wait for workers to finish printing
+pc.done                 // tell workers to quit
 @endcode
 
 Several things need to be highlighted:
@@ -142,8 +142,9 @@ Also, with a single cpu, it is often the case that  statements
 can be moved out of an innermost loop, but can't be in a parallel
 computation. eg.
 @code
+// pretend g is a Vector assigned earlier to conductances to test
 for i = 1, 20
-   forall gnabar_hh = g[i]
+   forall gnabar_hh = g.x[i]
    for j = 1, 5
       stim.amp = s[j]
       run()
@@ -155,7 +156,7 @@ parallelization would look like:
 @code
 for i = 1, 20 {
    for j= 1, 5 {
-      sprint(cmd, "forall gnabar_hh = g[%d] stim.amp = s[%d] run()\n", i, j)
+      sprint(cmd, "{forall gnabar_hh = g[%d]} stim.amp = s[%d] run()\n", i, j)
       pc.submit(cmd)
    }
 }
@@ -612,7 +613,7 @@ Unpacking the message must take place in the same order as the packing
 and must be complete before the next bulletin board operation.
 (at which time remaining message info will be discarded)
 It is not required to unpack the entire message, but later items cannot
-be retrieve without unpacking earlier items first. Optional arguments
+be retrieved without unpacking earlier items first. Optional arguments
 get the first unpacked values. Scalar, Vectors, and strdef may be
 unpacked. Scalar arguments must be pointers to
 a variable. eg @{&x@}. Unpacked Vectors will be resized to the
@@ -660,7 +661,7 @@ take#ParallelContext look#ParallelContext
 pc.pack(...)
 @hdesc
 Append arguments consisting of scalars, Vectors, strdefs,
-and pickleable Python objects into a message
+and pickleable Python objects into a message body
 for a subsequent post.
 @hsee
 post#ParallelContext
@@ -741,8 +742,7 @@ total = pc.wait_time()
 @hdesc
 The amount of time (seconds)
 on a worker spent waiting for a message from the master. For the master,
-it is the amount of time in the pc.take call that is not spent doing a
-submitted job.
+it is the amount of time in the pc.take calls that was spent waiting.
 
 To determine the time spent exchanging spikes during a simulation, use
 the idiom:
@@ -822,7 +822,7 @@ mechanism type index, not the index of the MechanismType.
 @hsee
 internal_type#MechanismType
 @h
-? ImplementationNotes
+? PVM ImplementationNotes
 @hdesc
 With the following information you may be encouraged to provide
 a more efficient implementation. You may also see enough information
@@ -842,7 +842,7 @@ server process did not respond to requests for about a tenth of a second.
 If pvm is not running, a local implementation of the server is used
 which has even less overhead than pvm packing and unpacking.
 
-Client (worker processes) communicate with the bulletin board server
+Clients (worker processes) communicate with the bulletin board server
 (in the master machine) with pvm commands pvm_send and pvm_recv.
 The master process is notified of asynchronous events via the SIGPOLL
 signal. Unfortunately this is often early since a pvm message often
@@ -1027,7 +1027,8 @@ Michael-Hines-Computer-2.local
 @hsyn
 waittime = pc.barrier()
 @hdesc
-Does an MPI_Barrier and returns the wait time at the barrier.
+Does an MPI_Barrier and returns the wait time at the barrier.  Execution
+resumes only after all process reach this statement.
 @h
 
 ? allreduce
@@ -1095,6 +1096,8 @@ pc.broadcast(vector, root)
 Every host gets the value from the host with pc.id == root.
 The vector is resized to the size of the root host vector.
 The return value is the length of the string or the size of the vector.
+At the time that each other-than-root host reaches this statement 
+they receive the values sent from the root host.
 @h
 
 ?1 SubWorld
@@ -1196,7 +1199,7 @@ is only one process, the master,
 @hex
 The following example is intended to be run with 6 processes. The subworlds
 function with an argument of 3 will divide the 6 process world into
-two subworlds each with 3 processes. To aid in see how the computation
+two subworlds each with 3 processes. To aid in seeing how the computation
 progresses the function "f" prints its rank and number of processors
 for the world, bulletin board, and net (subworld) as well as argument,
 return value, and bulletin board defined userid. Prior to the runworker
@@ -1351,9 +1354,9 @@ cell be associated with a unique integer global id (gid). The
 implementation that makes use of these facilities. That implementation
 assumes that all conductance based cells contain a public
 @{connect2target(targetsynapse, netcon)@} which connects the target synapse
-object to a specific range variable (usually soma.v(.5)) and returns the
+object to a specific range variable (e.g. soma.v(.5)) and returns the
 new NetCon in the second object argument. Artificial cells may either be
-bare or wrapped in class and made public as a @{pp@} object field. That is,
+bare or wrapped in class and made public as a Point Process object field. That is,
 cells built as NetworkReadyCells are compatible with the
 ParallelNetManager and that manager follows as closely as possible
 the style of network construction used by the NetGUI builder.
@@ -1400,7 +1403,7 @@ available that makes use only of standard ParallelContext methods.
 @hsyn
 pc.set_gid2node(gid, id)
 @hdesc
-If the id is equal to pc.id then this this machine "owns" the gid and
+If the id is equal to pc.id then this machine "owns" the gid and
 the associated cell
 should be eventually created only on this machine.
 Note that id must be in the range 0 to pc.nhost-1. The global id (gid)
@@ -1495,7 +1498,7 @@ pc.spike_record(gid, spiketimevector, gidvector)
 This is a synonym for @arecord#NetCon but obviates the requirement of
 creating a NetCon using information about the source cell that is
 relatively more tedious to obtain. This can only be called on the source
-machine. Note that a prerequisite is a call
+cell's machine. Note that a prerequisite is a call
 to @acell#ParallelContext . A call to @aoutputcell#ParallelContext is NOT
 a prerequisite.
 @h
@@ -1653,7 +1656,7 @@ wait_time#ParallelContext set_maxstep#ParallelContext
 @hsyn
 pc.max_histogram(vec)
 @hdesc
-The vector is used to accumulate histogram information about the
+The vector, vec, of size nhosts, is used to accumulate histogram information about the
 maximum number of spikes sent by any cpu during the spike exchange process.
 Every spike exchange, one element of the vector is incremented by 1.
 It only makes sense to do this on one cpu, normally pc.id == 0.
@@ -1811,7 +1814,7 @@ that have no multisplit cells, must participate in this determination.
 (If anyone calls multisplit(...), everyone must call multisplit().)
 
 For backbone_style 0 or 1,
-if nodes have the same sid they must be on different hosts
+if nodes have the same split id, sid, they must be on different hosts
 but that is not a serious restriction since in that case
 the subtrees would normally be connected together using
 the standard @aconnect statement.
@@ -1865,7 +1868,7 @@ With type = 1
 erases the internal lists pertaining to gid information and cleans
 up all the internal references to those gids. This allows one
 to start over with new @aset_gid2node calls. Note that NetCon and cell
-objects would have to be dereferenced separately under user control.W
+objects would have to be dereferenced separately under user control.
 
 With type = 2 clears any information setup by @asplitcell#ParallelTransfer or
 @amultisplit#ParallelTransfer.
@@ -1899,7 +1902,7 @@ multiple threads do not attempt to update the value at the same time
 a file scope LOCAL along with the possibility of passing values back
 to hoc in response to calling a PROCEDURE, use the THREADSAFE keyword
 in the NEURON block to automatically treat those GLOBAL variables
-as thread specific variables. Hoc always assignd and evaluate only
+as thread specific variables. Hoc assigns and evaluates only
 the thread 0 version and if FUNCTIONs and PROCEDUREs are called from
 Hoc, the thread 0 version of these globals are used.
 @h
