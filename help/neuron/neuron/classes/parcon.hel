@@ -822,8 +822,10 @@ mechanism type index, not the index of the MechanismType.
 @hsee
 internal_type#MechanismType
 @h
-? PVM ImplementationNotes
+? ImplementationNotes
 @hdesc
+Some of these notes are PVM specific.
+
 With the following information you may be encouraged to provide
 a more efficient implementation. You may also see enough information
 here to decide that this implementation is about as good as can be
