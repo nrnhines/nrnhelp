@@ -401,9 +401,10 @@ for letter in $letters ; do
 
   echo "<tr>"    >> $bf
   printf %s "<td  style=\"vertical-align: top;\"><pre>" >> $bf 
-   for i in `seq 1 $nr` 
-     do printf %s $letter"<br>"  >> $bf 
-   done 
+#print the letter as first item on each line
+#   for i in `seq 1 $nr` 
+#     do printf %s $letter"<br>"  >> $bf 
+#   done 
   printf %s "</pre></td>"  >> $bf 
 
   for icol in `seq 1 $ncol`; do 

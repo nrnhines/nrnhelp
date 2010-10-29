@@ -80,6 +80,11 @@ number (highindex).
 If the lowindex arg is present and nonzero, then that lowindex is used
 instead of the global one specified by @amcell_ran4_init#functions .
 This allows 2^32-1 independent streams that do not overlap.
+
+Note that for reproducibility,
+the distribution should be defined AFTER setting the seed since some
+distributions, such as @anormal#Random , hold state information from
+a previous pick from the uniform distribution.
 @hex
 @execcode mcunif
 @code

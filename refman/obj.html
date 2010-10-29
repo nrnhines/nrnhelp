@@ -333,22 +333,16 @@ base class.
 Polymorphism allows the computer to choose the right thing to do when
 a function is called on the base class.
 <p>
-Only an example can suggest that these concepts might have some value.
-<p>
-Suppose we need to construct cells of several types and connect them
-together to form a cell layer.
-
 The classic example
 is a drawing program that manages a list of objects of type "shape".
 Shape is a base class for a bunch of particular types of shape: lines,
-rectangles, circles, etc. and if you want to know the position of any
-of them
-	line3.
-
+rectangles, circles, etc.
+<p>
  For example a circle is defined as a particular kind of shape
 and so is a square. All shapes have a position and that is managed by the
 base class but different kinds of shapes requre different methods for
-
+drawing the shape.
+<p>
 Inheritance is most effective when the subtype "IS A"
 kind of base type. That is, whenever a program uses the an object of the
 base type then it would also make sense if it used an object of the subtype.
@@ -363,26 +357,26 @@ behavior common to both classes and place it in a base class that can be
 inherited by both classes.
 <p>
 When inheritance captures the "IS A" relationship then Polymorphism is
-possible. A language supports Polymorphism when it automatically does the
-right thing 
+possible.
 <p>
-OC has no direct support for inheritance but you can get half of its
-effectiveness by
-
+OC has no direct support for inheritance.
+It can only be (tediously) implemented by having the subclass instance
+create its "superclass" during initialization and supply stub methods
+for calling the methods of the superclass.
 <p>
-<a name=coplein>Coplein</a>
+<h2><a name=coplein>Coplein</a></h2>
 To begin learning
 C++ you can start with any of a myriad of introductory books.  But you
 should end with Coplein's <b>Advanced C++ Programming; styles and
 idioms</b>.
 <p>
-<a name=objrefnever>Well, almost never.</a>
+<h2><a name=objrefnever>Well, almost never.</a></h2>
 An object
 does have a unique name that can be used anywhere a reference to the
 object is used.  But that feature is for the use of the graphical
 interface and should <a href:#objrefnever2>never</a> be used in programming. 
 <p>
-<a name=objrefnever2> Never. This time I really mean it.</a>
+<h2><a name=objrefnever2> Never. This time I really mean it.</a></h2>
 Object names or id's are not guaranteed to be the same between different
 sessions of NEURON unless the sequence of creation and destruction of
 objects of the same type are identical. The object name is defined as

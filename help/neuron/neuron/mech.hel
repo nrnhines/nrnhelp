@@ -23,6 +23,20 @@ level since the section stack is automatically popped when waiting for
 user input.
 @hsee
 pop_section#CurrentlyAccessedSection
+get_segment
+@h
+
+?2 get_segment
+@hsyn
+pyseg = pnt.get_segment()
+@hdesc
+A more pythonic version of @aget_loc in that it returns a python segment object
+without pushing the section stack. From a segment object one can get the
+section with @{pyseg.sec@} and the position with @{pyseg.x@}. If the
+point process is not located anywhere, the return value is None.
+@hbug
+Segment objects become invalid if nseg changes. Discard them as soon as
+possible and do not keep them around.
 @h
 
 ?2 loc
