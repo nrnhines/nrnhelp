@@ -131,6 +131,16 @@ oc>for i=0,6 print i,": ", nrnversion(i)
 oc>
 
 @endcode
+@hbug
+An arg of 7 now returns a space separated string of the arguments used
+during launch.
+e.g.
+@code
+$ nrniv -nobanner -c 'nrnversion()' -c 'nrnversion(7)'
+NEURON -- VERSION 7.2 twophase_multisend (534:2160ccb31406) 2010-12-09
+nrniv -nobanner -c nrnversion() -c nrnversion(7)
+$ 
+@endcode
 @h
 
 

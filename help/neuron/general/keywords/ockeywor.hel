@@ -188,6 +188,7 @@ i = 0
 while (i < numelements){
 	print(cos(vec.x[i]))
 	print(sin(vec.x[i]))
+	i += 1
 }
 @endcode
 prints the cosines and the sines of the @{vec@} elements up to @{numelements@}, which in this case = 20. 

@@ -22,6 +22,7 @@ ivoc_style("*MenuItem*font", "*helvetica-medium-r-normal*--24*")
 ?2 variable_domain
 @hsyn
 variable_domain(&variable, lower_limit, upper_limit)
+variable_domain("varname", lower_limit, upper_limit)
 @hdesc
 Define the domain limits for any variable for which one can take its address.
 At this time only field editors check the variable domain. If one
@@ -31,7 +32,7 @@ variables such as dt, L, diam, and Ra have reasonable default domains.
 Many parameters defined in model description files also have reasonable domains.
 
 This function is most useful when a variable makes sense only as a
-nonzero or positive number.
+non-negative or positive number.
 
 One can specify different domains only on a per name basis. Thus there
 is only one domain specification for L and one for all the instances of
