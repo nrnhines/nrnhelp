@@ -1036,10 +1036,15 @@ resumes only after all process reach this statement.
 ? allreduce
 @hsyn
 result = pc.allreduce(value, type)
+pc.allreduce(src_dest_vector, type)
 @hdesc
 Type is 1, 2, or 3 and the every host gets a
 result as sum over all value, maximum
 value, or minimum value respectively
+
+If the first arg is a Vector the reduce is done element-wise. ie
+min of each rank's v.x[0] returned in each rank's v.x[0], etc. Note that
+each vector must have the same size.
 @h
 
 ? allgather
