@@ -178,7 +178,8 @@ an array, then the optional index can be specified.
 @hsyn
 val = ms.get("@varvarname" [, arrayindex])
 @hdesc
-	returns the value of the parameter.
+	returns the value of the parameter. If the variable is acutually
+a POINTER and it is nil, then return -1e300.
 @h
 
 ? save
