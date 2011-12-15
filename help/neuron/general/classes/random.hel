@@ -16,6 +16,14 @@ RNG class wrapper for @amcell_ran4#functions was added and is available
 with the @aMCellRan4#Random method. The current default random generator
 is @aACG#Random .
 
+As of version 7.3, a more versatile cryptographic quality generator,
+Random123, is available with the @aRandom123#Random method. This generator
+uses a 34bit counter, 2 32 bit identifiers, and a 32 bit global index and
+is most suitable for managing separate independent, reproducible, restartable
+streams that are unique to individual cell and synapses in large parallel
+network models.
+See: http://www.thesalmons.org/john/random123/papers/random123sc11.pdf
+
 Note that multiple instances of the Random class will produce different
 streams of random numbers only if their seeds are different.
 
@@ -85,6 +93,8 @@ Note that for reproducibility,
 the distribution should be defined AFTER setting the seed since some
 distributions, such as @anormal#Random , hold state information from
 a previous pick from the uniform distribution.
+@hsee
+Random123#Random
 @hex
 @execcode mcunif
 @code
@@ -116,16 +126,50 @@ xpanel()
 @endcode
 @h
 
+? Random123
+0 = r.Random123(id1, id2)
+@hdesc
+Use the Random123 generator (currently philox4x32 is the crypotgraphic hash
+used) with the stream identified by the identifiers 0 <= id1 and id1 < 2^32
+and the global index (see @aRandom123_globalindex#Random ). The counter,
+which increments from 0 to 2^34-1, is initialized to 0 (see @aseq#Random ).
+
+The generators should be usable in the context of threads as long as
+no instance is used in more than one thread.
+
+This generator
+uses a 34bit counter, 2 32 bit identifiers, and a 32 bit global index and
+is most suitable for managing separate independent, reproducible, restartable
+streams that are unique to individual cell and synapses in large parallel
+network models.
+See: http://www.thesalmons.org/john/random123/papers/random123sc11.pdf 
+@h
+
+? Random123_globalindex
+uint32 = r.Random123_globalindex([uint32])
+@hdesc
+Gets and sets the global index used by all instances of the Random123
+instances of Random.
+@h
+
 ? seq
 currenthighindex = r.seq()
 r.seq(sethighindex)
 @hdesc
+For MCellRan4,
 Gets and sets the current highindex value when the @aMCellRan4#Random is
 in use. This allows restarting the generator at any specified point.
 Note that the currenthighindex value is incremented every @arepick#Random .
 Usually the increment is 1 but some distributions, e.g. @apoisson#Random
 can increment by more. Also, some distributions, e.g. @anormal#Random ,
 pick twice on the first repick but once thereafter.
+
+For Random123,
+Gets and sets the counter value which ranges from 0 to 2^34-1.
+The reason the the greater range is that the internal Random123 generators
+return 4 uint32 values on each call. So that is done only every 4 picks from
+the generator.
+
 @hex
 @execcode seq
 @code
