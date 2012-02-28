@@ -1546,6 +1546,22 @@ is exactly what will end up happening except the solve will be broken into
 steps determined by the result of @aset_maxstep#ParallelContext.
 @h
 
+? timeout
+@hsyn
+oldtimeout = pc.timeout(seconds)
+@hdesc
+During execution of @apsolve#ParallelContext@a ,
+sets the timeout for when to abort when seconds pass and t does not
+increase.  Returns the old timeout.  The standard timeout is 20 seconds.
+If the arg is 0, then there is no timeout.
+The purpose of a timeout is to avoid wasting time on massively
+parallel supercomputers when an error occurs such that one would wait
+forever in a collective.  This function allows one to change the timeout
+in those rare cases during a simulation where processes have to wait on
+some process to finish a large amount work or some time step has an
+extreme load imbalance. 
+@h
+
 ? set_maxstep
 @hsyn
 local_minimum_delay = pc.set_maxstep(default_max_step)
